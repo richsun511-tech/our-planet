@@ -114,6 +114,24 @@ body {
   z-index: 2;
 }
 .calendar-btn:active { background: rgba(255,255,255,0.12); }
+.notify-btn {
+  position: absolute;
+  top: 40px; right: 92px;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s;
+  z-index: 2;
+}
+.notify-btn:active { background: rgba(255,255,255,0.12); }
+.notify-btn.enabled { background: rgba(255,154,86,0.2); border-color: var(--accent2); color: var(--accent2); }
 .sync-status {
   font-size: 11px; color: var(--text2);
   margin-top: 6px; min-height: 16px;
@@ -717,6 +735,7 @@ body {
   <div class="planet-header">
     <button class="settings-btn" onclick="openSyncModal()" title="云同步设置">⚙️</button>
     <button class="calendar-btn" onclick="syncToCalendar()" title="同步到苹果日历">📅</button>
+    <button class="notify-btn" id="notifyBtn" onclick="requestNotification()" title="开启消息提醒">🔔</button>
     <div class="planet" onclick="togglePlanetFlip()" title="点击翻转">
       <div class="planet-flip" id="planetFlip">
         <div class="planet-front"></div>
@@ -2080,16 +2099,108 @@ function syncToCalendar() {
   URL.revokeObjectURL(url);
 }
 
+// ===================== 消息推送通知 =====================
+let swRegistration = null;
+
+async function registerSW() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    swRegistration = await navigator.serviceWorker.register('sw.js');
+    console.log('SW registered');
+    updateNotifyBtn();
+  } catch(e) {
+    console.warn('SW register failed:', e);
+  }
+}
+
+async function requestNotification() {
+  if (!('Notification' in window)) {
+    alert('你的浏览器不支持通知功能');
+    return;
+  }
+
+  if (Notification.permission === 'granted') {
+    alert('已开启消息提醒！纪念日当天会收到通知。');
+    return;
+  }
+
+  const result = await Notification.requestPermission();
+  if (result === 'granted') {
+    updateNotifyBtn();
+    scheduleNotifications();
+  }
+}
+
+function updateNotifyBtn() {
+  const btn = document.getElementById('notifyBtn');
+  if (!btn) return;
+  if (Notification.permission === 'granted') {
+    btn.classList.add('enabled');
+    btn.title = '消息提醒已开启';
+  } else {
+    btn.classList.remove('enabled');
+    btn.title = '开启消息提醒';
+  }
+}
+
+function scheduleNotifications() {
+  if (!swRegistration || Notification.permission !== 'granted') return;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (const mem of memories) {
+    const anni = getNextAnniversary(mem);
+    if (anni.days === 0) {
+      // 今天就是纪念日
+      const title = mem.calType === 'lunar'
+        ? '🎉 今天' + mem.lunarDisplay + ' ' + mem.title
+        : '🎉 纪念日: ' + mem.title;
+
+      const options = {
+        body: (mem.text || '今天是你们的纪念日！') + (mem.calType === 'lunar' ? '\n阴历: ' + mem.lunarDisplay : ''),
+        icon: '/icon.png',
+        badge: '/icon.png',
+        tag: mem.id,
+        data: { url: window.location.href }
+      };
+
+      swRegistration.showNotification(title, options)
+        .catch(e => console.warn('通知失败:', e));
+    } else if (anni.days === 1) {
+      // 明天
+      swRegistration.showNotification('⏰ 明天就是 ' + mem.title + '！', {
+        body: '还剩 1 天，准备惊喜吧 💝',
+        icon: '/icon.png',
+        badge: '/icon.png',
+        tag: 'tmo_' + mem.id,
+        data: { url: window.location.href }
+      }).catch(e => console.warn('通知失败:', e));
+    }
+  }
+}
+
+// 每天检查一次通知
+function setupNotificationTimer() {
+  if (Notification.permission !== 'granted') return;
+  scheduleNotifications();
+  setInterval(scheduleNotifications, 3600000); // 每小时检查
+}
+
 function init() {
   initStars();
   loadSyncConfig();
-  // 加载头像
   applyAvatar(loadAvatar());
   loadMemories().then(() => {
     initTagBar();
     renderAll();
     updateSyncStatusUI();
+    updateNotifyBtn();
+    setupNotificationTimer();
   });
+
+  // 注册 Service Worker
+  registerSW();
 
   // 阴历年变更时更新月份选项
   const lunarYearEl = document.getElementById('lunarYear');
