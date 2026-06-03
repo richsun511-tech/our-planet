@@ -2066,7 +2066,7 @@ function syncToCalendar() {
     if (mem.calType === 'lunar') {
       // 阴历纪念日：计算未来5年的阳历日期，分别写入
       desc += '\\n阴历: ' + (mem.lunarDisplay || '');
-      for (let year = currentYear; year < currentYear + 5; year++) {
+      for (let year = currentYear; year < currentYear + 20; year++) {
         const solar = lunarToSolar(year, mem.lunarMonth, mem.lunarDay, mem.isLeap);
         const y = String(solar.year).padStart(4, '0');
         const m = String(solar.month).padStart(2, '0');
