@@ -837,9 +837,14 @@ body {
     <div class="modal-handle"></div>
     <div class="modal-title">☁️ 云端同步设置</div>
 
-    <div style="margin-bottom:16px;padding:12px;border-radius:12px;background:rgba(86,184,255,0.1);font-size:13px;color:var(--text2);line-height:1.6;">
-      💡 绑定坚果云后，手机端和电脑端数据自动同步。<br>
-      首次设置后无需重复操作。
+    <div style="margin-bottom:16px;padding:12px;border-radius:12px;background:rgba(87,217,163,0.1);font-size:13px;color:var(--text2);line-height:1.6;" id="syncHelp">
+      💡 首次使用需输入 GitHub Token 启用同步。<br>
+      你和女朋友用同一链接打开，数据自动互通。
+    </div>
+
+    <div class="form-group" id="tokenGroup">
+      <label class="form-label">GitHub Token</label>
+      <input class="form-input" type="password" id="syncToken" placeholder="ghp_xxxxxxxxxxxx">
     </div>
 
     <div class="form-group">
@@ -849,21 +854,6 @@ body {
         <span class="photo-upload-text" style="font-size:11px;">上传头像</span>
       </div>
       <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="handleAvatarSelect(event)">
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">WebDAV 地址</label>
-      <input class="form-input" type="text" id="syncUrl" placeholder="https://dav.jianguoyun.com/dav/">
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">坚果云账号（邮箱）</label>
-      <input class="form-input" type="text" id="syncUsername" placeholder="your@email.com">
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">应用密码</label>
-      <input class="form-input" type="password" id="syncPassword" placeholder="坚果云生成的第三方应用密码">
     </div>
 
     <div id="syncState" style="text-align:center;font-size:13px;color:var(--text2);margin-bottom:12px;"></div>
@@ -1048,14 +1038,13 @@ function lunarToSolar(lunarYear, lunarMonth, lunarDay, isLeap) {
 const STORAGE_KEY = 'our_planet_memories';
 const AVATAR_KEY = 'our_planet_avatar';
 const SYNC_CONFIG_KEY = 'our_planet_sync_config';
-const WEBDAV_FILE = 'our-planet-memories.json';
 
-// ===================== WebDAV 同步配置 =====================
+// ===================== GitHub 同步配置 =====================
 let syncConfig = {
-  enabled: true,
-  url: 'https://dav.jianguoyun.com/dav/',
-  username: '2437077128@qq.com',
-  password: 'auwvindv48ytd23e',
+  enabled: false,
+  url: '',
+  username: '',
+  password: '',
   lastSync: 0
 };
 
@@ -1070,45 +1059,45 @@ function saveSyncConfig() {
   localStorage.setItem(SYNC_CONFIG_KEY, JSON.stringify(syncConfig));
 }
 
-// WebDAV 请求封装
-async function webdavRequest(method, body) {
-  const url = syncConfig.url + WEBDAV_FILE;
-  const headers = new Headers();
-  headers.set('Authorization', 'Basic ' + btoa(syncConfig.username + ':' + syncConfig.password));
+// GitHub 同步引擎
+const GH_REPO = 'richsun511-tech/our-planet';
+const GH_FILE = 'data.json';
+const GH_API = 'https://api.github.com/repos/' + GH_REPO + '/contents/' + GH_FILE;
+let ghSha = null;
 
-  if (body) {
-    headers.set('Content-Type', 'application/json');
-  }
-
-  const resp = await fetch(url, {
-    method: method,
-    headers: headers,
-    body: body
-  });
-
-  if (!resp.ok && resp.status !== 404) {
-    throw new Error(`WebDAV error: ${resp.status} ${resp.statusText}`);
-  }
-
-  return resp;
-}
-
-// 从 WebDAV 读取数据
-async function webdavRead() {
+async function githubRead() {
   try {
-    const resp = await webdavRequest('GET');
-    if (resp.status === 404) return null; // 文件不存在
-    const text = await resp.text();
-    return text ? JSON.parse(text) : [];
-  } catch(e) {
-    console.warn('WebDAV 读取失败:', e);
-    throw e;
-  }
+    const resp = await fetch(GH_API, {
+      headers: { 'Authorization': 'token ' + syncConfig.password }
+    });
+    if (resp.status === 404) return null;
+    if (!resp.ok) throw new Error('GitHub read: ' + resp.status);
+    const json = await resp.json();
+    ghSha = json.sha;
+    const content = atob(json.content.replace(/\s/g, ''));
+    return JSON.parse(content);
+  } catch(e) { console.warn(e); return null; }
 }
 
-// 写入 WebDAV
-async function webdavWrite(data) {
-  await webdavRequest('PUT', JSON.stringify(data));
+async function githubWrite(data) {
+  const jsonStr = JSON.stringify(data);
+  const body = {
+    message: 'Sync data',
+    content: btoa(unescape(encodeURIComponent(jsonStr))),
+    branch: 'main'
+  };
+  if (ghSha) body.sha = ghSha;
+  const resp = await fetch(GH_API, {
+    method: 'PUT',
+    headers: {
+      'Authorization': 'token ' + syncConfig.password,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+  if (!resp.ok) throw new Error('GitHub write: ' + resp.status);
+  const json = await resp.json();
+  ghSha = json.content.sha;
 }
 
 // 合并数据：以时间戳为准，保留最新版本
@@ -1129,43 +1118,28 @@ function mergeData(localData, remoteData) {
 // 完整同步流程
 async function syncMemories() {
   if (!syncConfig.enabled) return;
-
   try {
-    // 1. 读取远程数据
-    const remoteData = await webdavRead();
-
-    // 2. 合并
+    const remoteData = await githubRead();
     if (remoteData !== null) {
       memories = mergeData(memories, remoteData);
-      // 先存本地
       localStorage.setItem(STORAGE_KEY, JSON.stringify(memories));
     }
-
-    // 3. 推送本地到远程
-    await webdavWrite(memories);
+    await githubWrite(memories);
     syncConfig.lastSync = Date.now();
     saveSyncConfig();
-
-    console.log('✅ 同步成功');
     return true;
-  } catch(e) {
-    console.warn('❌ 同步失败:', e.message);
-    return false;
-  }
+  } catch(e) { console.warn(e); return false; }
 }
 
-// 仅推送（保存后调用）
+// 仅推送
 async function pushToRemote() {
   if (!syncConfig.enabled) return;
   try {
-    await webdavWrite(memories);
+    await githubWrite(memories);
     syncConfig.lastSync = Date.now();
     saveSyncConfig();
     return true;
-  } catch(e) {
-    console.warn('推送失败:', e.message);
-    return false;
-  }
+  } catch(e) { console.warn(e); return false; }
 }
 
 let memories = [];
@@ -1190,17 +1164,16 @@ async function loadMemories() {
   loadSyncConfig();
   if (syncConfig.enabled) {
     try {
-      const remoteData = await webdavRead();
+      const remoteData = await githubRead();
       if (remoteData !== null) {
         memories = mergeData(memories, remoteData);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(memories));
-        // 推送合并后的数据到云端
-        await webdavWrite(memories);
+        await githubWrite(memories);
         syncConfig.lastSync = Date.now();
         saveSyncConfig();
       }
     } catch(e) {
-      console.warn('云端同步失败，使用本地数据:', e.message);
+      console.warn('同步失败，使用本地数据:', e.message);
     }
   }
 }
@@ -1866,24 +1839,24 @@ document.getElementById('memDate').addEventListener('change', () => {
 // ===================== 云同步设置弹窗 =====================
 function openSyncModal() {
   const modal = document.getElementById('syncModal');
-  const disableBtn = document.getElementById('btnDisableSync');
   const stateEl = document.getElementById('syncState');
-
-  document.getElementById('syncUrl').value = syncConfig.url || 'https://dav.jianguoyun.com/dav/';
-  document.getElementById('syncUsername').value = syncConfig.username || '';
-  document.getElementById('syncPassword').value = syncConfig.password || '';
-
-  // 显示当前头像预览
+  const tokenGroup = document.getElementById('tokenGroup');
+  const syncHelp = document.getElementById('syncHelp');
   updateAvatarPreview();
 
-  if (syncConfig.enabled) {
-    disableBtn.style.display = 'block';
+  if (syncConfig.enabled && syncConfig.password) {
+    tokenGroup.style.display = 'none';
+    syncHelp.style.display = 'none';
     const timeStr = syncConfig.lastSync ? new Date(syncConfig.lastSync).toLocaleString('zh-CN') : '未知';
-    stateEl.textContent = '✅ 已绑定 · 上次同步：' + timeStr;
+    stateEl.textContent = '✅ 已启用同步 · 上次：' + timeStr;
     stateEl.style.color = '#57d9a3';
+    document.getElementById('btnDisableSync').style.display = 'block';
   } else {
-    disableBtn.style.display = 'none';
+    tokenGroup.style.display = 'block';
+    syncHelp.style.display = 'block';
     stateEl.textContent = '';
+    document.getElementById('btnDisableSync').style.display = 'none';
+    document.getElementById('syncToken').value = '';
   }
 
   modal.style.display = 'flex';
@@ -1896,51 +1869,44 @@ function closeSyncModal() {
 }
 
 async function saveSyncSettings() {
-  const url = document.getElementById('syncUrl').value.trim();
-  const username = document.getElementById('syncUsername').value.trim();
-  const password = document.getElementById('syncPassword').value.trim();
+  const stateEl = document.getElementById('syncState');
+  const tokenInput = document.getElementById('syncToken');
 
-  if (!url || !username || !password) {
-    alert('请填写完整的坚果云信息');
-    return;
+  if (!syncConfig.password) {
+    const token = tokenInput.value.trim();
+    if (!token) { stateEl.textContent = '请输入 GitHub Token'; stateEl.style.color = 'var(--text2)'; return; }
+    syncConfig.password = token;
   }
 
-  // 确保 URL 以 / 结尾
-  syncConfig.url = url.endsWith('/') ? url : url + '/';
-  syncConfig.username = username;
-  syncConfig.password = password;
   syncConfig.enabled = true;
-
-  const stateEl = document.getElementById('syncState');
-  stateEl.textContent = '⏳ 正在测试连接...';
+  stateEl.textContent = '⏳ 正在同步...';
   stateEl.style.color = 'var(--text2)';
 
-  // 测试连接并首次同步
   try {
     const success = await syncMemories();
     if (success !== false) {
-      stateEl.textContent = '✅ 连接成功！数据已同步';
-      stateEl.style.color = '#57d9a3';
       syncConfig.lastSync = Date.now();
       saveSyncConfig();
+      stateEl.textContent = '✅ 同步成功！';
+      stateEl.style.color = '#57d9a3';
       document.getElementById('btnDisableSync').style.display = 'block';
+      document.getElementById('tokenGroup').style.display = 'none';
       renderAll();
       updateSyncStatusUI();
       setTimeout(closeSyncModal, 1500);
+    } else {
+      stateEl.textContent = '❌ 同步失败，检查网络';
+      stateEl.style.color = '#ff6b6b';
     }
   } catch(e) {
-    stateEl.textContent = '❌ 连接失败：' + e.message;
+    stateEl.textContent = '❌ ' + e.message;
     stateEl.style.color = '#ff6b6b';
-    syncConfig.enabled = false;
   }
 }
 
 function disableSync() {
-  if (!confirm('确定要断开云同步吗？数据会保留在本地。')) return;
+  if (!confirm('确定要断开云同步吗？')) return;
   syncConfig.enabled = false;
-  syncConfig.url = '';
-  syncConfig.username = '';
-  syncConfig.password = '';
   syncConfig.lastSync = 0;
   saveSyncConfig();
   closeSyncModal();
@@ -1951,8 +1917,7 @@ function updateSyncStatusUI() {
   const el = document.getElementById('syncStatus');
   if (!el) return;
   if (syncConfig.enabled) {
-    const timeStr = syncConfig.lastSync ? new Date(syncConfig.lastSync).toLocaleString('zh-CN') : '';
-    el.textContent = '☁️ 已同步' + (timeStr ? ' · ' + timeStr : '');
+    el.textContent = '☁️ 已同步';
     el.className = 'sync-status synced';
   } else {
     el.textContent = '⚙️ 点击设置云同步';
