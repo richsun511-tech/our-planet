@@ -2046,6 +2046,7 @@ function syncToCalendar() {
   }
 
   const now = new Date();
+  const currentYear = now.getFullYear();
   const icsLines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
@@ -2058,31 +2059,51 @@ function syncToCalendar() {
   ];
 
   for (const mem of memories) {
-    const memDate = new Date(mem.date);
     const title = mem.title || '纪念日';
     const tags = (mem.tags || []).join('、');
     let desc = (mem.text || '') + (tags ? '\\n\\n标签: ' + tags : '');
-    if (mem.calType === 'lunar' && mem.lunarDisplay) {
-      desc += '\\n阴历: ' + mem.lunarDisplay;
+
+    if (mem.calType === 'lunar') {
+      // 阴历纪念日：计算未来5年的阳历日期，分别写入
+      desc += '\\n阴历: ' + (mem.lunarDisplay || '');
+      for (let year = currentYear; year < currentYear + 5; year++) {
+        const solar = lunarToSolar(year, mem.lunarMonth, mem.lunarDay, mem.isLeap);
+        const y = String(solar.year).padStart(4, '0');
+        const m = String(solar.month).padStart(2, '0');
+        const d = String(solar.day).padStart(2, '0');
+        const dtStart = y + m + d;
+
+        icsLines.push(
+          'BEGIN:VEVENT',
+          'UID:' + mem.id + '-' + year + '@our-planet',
+          'DTSTART;VALUE=DATE:' + dtStart,
+          'DTEND;VALUE=DATE:' + dtStart,
+          'SUMMARY:' + title,
+          'DESCRIPTION:' + desc,
+          'TRANSP:TRANSPARENT',
+          'END:VEVENT'
+        );
+      }
+    } else {
+      // 阳历纪念日：使用每年重复规则
+      const memDate = new Date(mem.date);
+      const y = memDate.getFullYear();
+      const m = String(memDate.getMonth() + 1).padStart(2, '0');
+      const d = String(memDate.getDate()).padStart(2, '0');
+      const dtStart = y + m + d;
+
+      icsLines.push(
+        'BEGIN:VEVENT',
+        'UID:' + mem.id + '@our-planet',
+        'DTSTART;VALUE=DATE:' + dtStart,
+        'DTEND;VALUE=DATE:' + dtStart,
+        'RRULE:FREQ=YEARLY',
+        'SUMMARY:' + title,
+        'DESCRIPTION:' + desc,
+        'TRANSP:TRANSPARENT',
+        'END:VEVENT'
+      );
     }
-
-    // 格式化为 YYYYMMDD
-    const y = memDate.getFullYear();
-    const m = String(memDate.getMonth() + 1).padStart(2, '0');
-    const d = String(memDate.getDate()).padStart(2, '0');
-    const dtStart = y + m + d;
-
-    icsLines.push(
-      'BEGIN:VEVENT',
-      'UID:' + mem.id + '@our-planet',
-      'DTSTART;VALUE=DATE:' + dtStart,
-      'DTEND;VALUE=DATE:' + dtStart,
-      'RRULE:FREQ=YEARLY',
-      'SUMMARY:' + title,
-      'DESCRIPTION:' + desc,
-      'TRANSP:TRANSPARENT',
-      'END:VEVENT'
-    );
   }
 
   icsLines.push('END:VCALENDAR');
