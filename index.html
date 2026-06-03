@@ -933,7 +933,7 @@ function solarToLunar(year, month, day) {
   let objDate = new Date(year, month - 1, day);
   let offset = Math.floor((objDate - baseDate) / 86400000);
 
-  let lunarYear, lunarMonth, lunarDay;
+  let lunarYear, lunarMonth = 1, lunarDay;
   let isLeap = false;
 
   for (lunarYear = 1900; lunarYear < 2101 && offset > 0; lunarYear++) {
@@ -943,41 +943,43 @@ function solarToLunar(year, month, day) {
   }
 
   let leap = getLeapMonth(lunarYear);
-  let isLeapMonth = false;
 
-  for (lunarMonth = 1; lunarMonth < 13 && offset > 0; lunarMonth++) {
-    if (leap > 0 && lunarMonth === (leap + 1) && !isLeapMonth) {
-      --lunarMonth;
-      isLeapMonth = true;
+  // 逐月遍历，正确处理闰月
+  while (offset >= 0 && lunarMonth <= 12) {
+    let daysInMonth = getLunarMonthDays(lunarYear, lunarMonth);
+
+    if (offset < daysInMonth) {
+      // 在当前平月中
+      lunarDay = offset + 1;
+      break;
+    }
+    offset -= daysInMonth;
+
+    // 检查当前月之后是否有闰月
+    if (leap === lunarMonth) {
       let daysInLeap = getLeapDays(lunarYear);
       if (offset < daysInLeap) {
+        // 在闰月中
         isLeap = true;
+        lunarDay = offset + 1;
         break;
       }
       offset -= daysInLeap;
-      isLeapMonth = false;
-    } else {
-      let daysInMonth = getLunarMonthDays(lunarYear, lunarMonth);
-      if (offset < daysInMonth) break;
-      offset -= daysInMonth;
     }
-  }
 
-  if (offset === 0 && leap === lunarMonth && isLeapMonth) {
-    offset = getLunarMonthDays(lunarYear, lunarMonth);
-    isLeapMonth = false;
     lunarMonth++;
+    if (lunarMonth > 12) break;
   }
 
-  lunarDay = offset + 1;
+  if (lunarDay === undefined) lunarDay = offset + 1;
 
   return {
     year: lunarYear,
-    month: lunarMonth,
-    day: lunarDay,
+    month: lunarMonth > 12 ? 12 : lunarMonth,
+    day: Math.min(lunarDay, 30),
     isLeap: isLeap,
-    monthStr: (isLeap ? '闰' : '') + LUNAR_MONTH_STR[lunarMonth],
-    dayStr: LUNAR_DAY_STR[lunarDay],
+    monthStr: (isLeap ? '闰' : '') + LUNAR_MONTH_STR[Math.min(lunarMonth, 12)],
+    dayStr: LUNAR_DAY_STR[Math.min(lunarDay, 30)],
     yearStr: STEM[(lunarYear - 4) % 10] + BRANCH[(lunarYear - 4) % 12] + '年'
   };
 }
