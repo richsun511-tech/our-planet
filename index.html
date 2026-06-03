@@ -2045,6 +2045,15 @@ function handleAvatarSelect(event) {
 
 // ===================== 同步到苹果日历 =====================
 function syncToCalendar() {
+  // 提示用户先删除旧日历
+  const shouldProceed = confirm(
+    '📅 同步到苹果日历\n\n' +
+    '请先手动删除之前导入的旧日历，再点「确定」导入新日历：\n\n' +
+    'iPhone：日历 App → 底部「日历」→ 找到「我们的星球」→ 点 ℹ️ → 删除日历\n\n' +
+    '这样可以确保删除的纪念日同步消失。'
+  );
+  if (!shouldProceed) return;
+
   if (memories.length === 0) {
     alert('还没有纪念日，请先添加');
     return;
