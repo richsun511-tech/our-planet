@@ -759,6 +759,7 @@ body {
   <!-- 标签筛选 -->
   <div class="tag-bar" id="tagBar">
     <div class="tag-chip active" data-tag="all">全部</div>
+    <div class="tag-chip" data-tag="生日">生日</div>
     <div class="tag-chip" data-tag="第一次">第一次</div>
     <div class="tag-chip" data-tag="旅行">旅行</div>
     <div class="tag-chip" data-tag="纪念日">纪念日</div>
@@ -851,6 +852,7 @@ body {
     <div class="form-group">
       <label class="form-label">标签（可多选）</label>
       <div class="tag-select" id="tagSelect">
+        <div class="tag-option" data-tag="生日" onclick="toggleTag('生日', this)">生日</div>
         <div class="tag-option" data-tag="第一次" onclick="toggleTag('第一次', this)">第一次</div>
         <div class="tag-option" data-tag="旅行" onclick="toggleTag('旅行', this)">旅行</div>
         <div class="tag-option" data-tag="纪念日" onclick="toggleTag('纪念日', this)">纪念日</div>
@@ -1381,12 +1383,12 @@ function renderCountdown() {
 }
 
 function getTagClass(tag) {
-  const map = { '第一次': 'first', '旅行': 'travel', '纪念日': 'love', '日常': 'other', '惊喜': 'love', '其他': 'other' };
+  const map = { '生日': 'love', '第一次': 'first', '旅行': 'travel', '纪念日': 'love', '日常': 'other', '惊喜': 'love', '其他': 'other' };
   return map[tag] || 'other';
 }
 
 function getTagColor(tag) {
-  const map = { '第一次': '#57d9a3', '旅行': '#56b8ff', '纪念日': '#ff6b9d', '日常': '#c084fc', '惊喜': '#ff9a56', '其他': '#94a3b8' };
+  const map = { '生日': '#ff6b9d', '第一次': '#57d9a3', '旅行': '#56b8ff', '纪念日': '#ff6b9d', '日常': '#c084fc', '惊喜': '#ff9a56', '其他': '#94a3b8' };
   return map[tag] || '#94a3b8';
 }
 
@@ -2135,34 +2137,59 @@ async function registerSW() {
 }
 
 async function requestNotification() {
-  if (!('Notification' in window)) {
+  if (!('Notification' in window) && !('serviceWorker' in navigator)) {
     alert('你的浏览器不支持通知。\n\n✅ 解决方法：在 Safari 打开此页面 → 点底部「分享」→「添加到主屏幕」→ 从桌面图标打开 → 再点🔔即可开启。');
     return;
   }
 
-  if (Notification.permission === 'granted') {
-    alert('已开启消息提醒！纪念日当天会收到通知。');
-    updateNotifyBtn();
-    scheduleNotifications();
-    return;
+  // iOS PWA 可能 Notification 对象存在但 permission 调用受限
+  // 先尝试 Service Worker 方式
+  if (swRegistration) {
+    try {
+      const sub = await swRegistration.pushManager.getSubscription();
+      if (sub) {
+        alert('✅ 消息提醒已开启！纪念日当天会收到通知。');
+        updateNotifyBtn();
+        scheduleNotifications();
+        return;
+      }
+    } catch(e) {
+      // iOS 可能不支持 pushManager，继续尝试 Notification API
+    }
   }
 
-  if (Notification.permission === 'denied') {
-    alert('通知权限已被拒绝。\n\n✅ 解决方法：iPhone 设置 → Safari → 通知 → 允许。或重新添加到主屏幕再试。');
-    return;
-  }
-
-  try {
-    const result = await Notification.requestPermission();
-    if (result === 'granted') {
+  // Notification API 方式
+  if ('Notification' in window) {
+    if (Notification.permission === 'granted') {
+      alert('✅ 消息提醒已开启！纪念日当天会收到通知。');
       updateNotifyBtn();
       scheduleNotifications();
-    } else {
-      alert('未开启通知。\n\n✅ 建议：在 Safari 打开 → 添加到主屏幕 → 从桌面图标打开 → 再试。');
+      return;
     }
-  } catch(e) {
-    alert('申请通知权限失败。\n\n✅ 解决方法：在 Safari 打开此页面 → 点底部「分享」→「添加到主屏幕」→ 从桌面图标打开 → 再点🔔');
+
+    if (Notification.permission === 'denied') {
+      alert('通知权限已被拒绝。\n\n✅ 解决方法：iPhone 设置 → Safari → 通知 → 允许。或重新添加到主屏幕再试。');
+      return;
+    }
+
+    try {
+      const result = await Notification.requestPermission();
+      if (result === 'granted') {
+        updateNotifyBtn();
+        scheduleNotifications();
+        // 发送测试通知
+        new Notification('我们的星球', { body: '✅ 消息提醒已开启！纪念日当天会通知你。', icon: '/icon.png' });
+      } else {
+        alert('未开启。\n\n✅ 建议：从桌面图标打开后再试（PWA 模式才完全支持）。');
+      }
+      return;
+    } catch(e) {
+      console.warn('Notification request failed:', e);
+    }
   }
+
+  // 都不支持，但 Service Worker 可能还能用 showNotification
+  alert('你的浏览器不完全支持通知。\n\n✅ 解决方法：\n1. 在 Safari 打开此页面\n2. 分享 → 添加到主屏幕\n3. 从桌面图标打开 → 再点🔔');
 }
 
 function updateNotifyBtn() {
