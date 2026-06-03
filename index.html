@@ -97,6 +97,23 @@ body {
   z-index: 2;
 }
 .settings-btn:active { background: rgba(255,255,255,0.12); }
+.calendar-btn {
+  position: absolute;
+  top: 40px; right: 46px;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s;
+  z-index: 2;
+}
+.calendar-btn:active { background: rgba(255,255,255,0.12); }
 .sync-status {
   font-size: 11px; color: var(--text2);
   margin-top: 6px; min-height: 16px;
@@ -699,6 +716,7 @@ body {
   <!-- 星球头部 -->
   <div class="planet-header">
     <button class="settings-btn" onclick="openSyncModal()" title="云同步设置">⚙️</button>
+    <button class="calendar-btn" onclick="syncToCalendar()" title="同步到苹果日历">📅</button>
     <div class="planet" onclick="togglePlanetFlip()" title="点击翻转">
       <div class="planet-flip" id="planetFlip">
         <div class="planet-front"></div>
@@ -1999,6 +2017,67 @@ function handleAvatarSelect(event) {
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
+}
+
+// ===================== 同步到苹果日历 =====================
+function syncToCalendar() {
+  if (memories.length === 0) {
+    alert('还没有纪念日，请先添加');
+    return;
+  }
+
+  const now = new Date();
+  const icsLines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//OurPlanet//CN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'X-WR-CALNAME:我们的星球',
+    'X-WR-CALDESC:情侣纪念日',
+    'X-APPLE-CALENDAR-COLOR:#FF6B9D',
+  ];
+
+  for (const mem of memories) {
+    const memDate = new Date(mem.date);
+    const title = mem.title || '纪念日';
+    const tags = (mem.tags || []).join('、');
+    let desc = (mem.text || '') + (tags ? '\\n\\n标签: ' + tags : '');
+    if (mem.calType === 'lunar' && mem.lunarDisplay) {
+      desc += '\\n阴历: ' + mem.lunarDisplay;
+    }
+
+    // 格式化为 YYYYMMDD
+    const y = memDate.getFullYear();
+    const m = String(memDate.getMonth() + 1).padStart(2, '0');
+    const d = String(memDate.getDate()).padStart(2, '0');
+    const dtStart = y + m + d;
+
+    icsLines.push(
+      'BEGIN:VEVENT',
+      'UID:' + mem.id + '@our-planet',
+      'DTSTART;VALUE=DATE:' + dtStart,
+      'DTEND;VALUE=DATE:' + dtStart,
+      'RRULE:FREQ=YEARLY',
+      'SUMMARY:' + title,
+      'DESCRIPTION:' + desc,
+      'TRANSP:TRANSPARENT',
+      'END:VEVENT'
+    );
+  }
+
+  icsLines.push('END:VCALENDAR');
+
+  const blob = new Blob([icsLines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'our-planet.ics';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function init() {
