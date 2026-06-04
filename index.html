@@ -1376,9 +1376,9 @@ function renderCountdown() {
     ? '<span>📌 ' + escapeHtml(anni.title) + '</span><span class="reset-hint">· 点击恢复自动</span>'
     : '⏳ 下一个纪念日';
 
-  // 纪念日天数：计算从创建日期到今天的天数
+  // 纪念日天数
   let sinceDays = '';
-  if (targetMem && (targetMem.tags || []).includes('纪念日')) {
+  if (targetMem) {
     const parts = targetMem.date.split('-');
     const created = new Date(+parts[0], parts[1] - 1, +parts[2]);
     const today = new Date();
