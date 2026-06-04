@@ -1,1 +1,1 @@
-self.addEventListener("install",e=>self.skipWaiting());self.addEventListener("activate",e=>{e.waitUntil(self.clients.matchAll().then(c=>c.forEach(x=>x.navigate(x.url))))});
+self.addEventListener("install",function(e){self.skipWaiting()});self.addEventListener("activate",function(e){e.waitUntil(self.clients.matchAll().then(function(c){c.forEach(function(x){x.navigate(x.url)})}))});
