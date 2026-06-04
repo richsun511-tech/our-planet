@@ -1,14 +1,1 @@
-// Self-unregistering service worker
-self.addEventListener('install', function(e) {
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', function(e) {
-  e.waitUntil(
-    self.registration.unregister().then(function() {
-      return self.clients.matchAll();
-    }).then(function(clients) {
-      clients.forEach(function(c) { c.navigate(c.url); });
-    })
-  );
-});
+self.addEventListener("install",e=>self.skipWaiting());self.addEventListener("activate",e=>{e.waitUntil(self.clients.matchAll().then(c=>c.forEach(x=>x.navigate(x.url))))});
