@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -295,6 +296,11 @@ body {
 }
 .countdown-date {
   margin-top: 2px; font-size: 12px; color: var(--text2);
+}
+.countdown-since {
+  margin-top: 10px; font-size: 18px; font-weight: 700;
+  color: var(--accent2);
+  letter-spacing: 1px;
 }
 .countdown-badge {
   display: inline-block;
@@ -763,6 +769,7 @@ body {
   <div class="tag-bar" id="tagBar">
     <div class="tag-chip active" data-tag="all">全部</div>
     <div class="tag-chip" data-tag="生日">生日</div>
+    <div class="tag-chip" data-tag="纪念日">纪念日</div>
     <div class="tag-chip" data-tag="第一次">第一次</div>
     <div class="tag-chip" data-tag="旅行">旅行</div>
     <div class="tag-chip" data-tag="纪念日">纪念日</div>
@@ -856,6 +863,7 @@ body {
       <label class="form-label">标签（可多选）</label>
       <div class="tag-select" id="tagSelect">
         <div class="tag-option" data-tag="生日" onclick="toggleTag('生日', this)">生日</div>
+        <div class="tag-option" data-tag="纪念日" onclick="toggleTag('纪念日', this)">纪念日</div>
         <div class="tag-option" data-tag="第一次" onclick="toggleTag('第一次', this)">第一次</div>
         <div class="tag-option" data-tag="旅行" onclick="toggleTag('旅行', this)">旅行</div>
         <div class="tag-option" data-tag="纪念日" onclick="toggleTag('纪念日', this)">纪念日</div>
@@ -1347,6 +1355,15 @@ function renderCountdown() {
   const anni = getTargetAnniversary();
   const isManual = selectedMemoryId !== null;
 
+  // 获取当前选中的纪念日（用于计算纪念日天数）
+  let targetMem = null;
+  if (selectedMemoryId) {
+    targetMem = memories.find(m => m.id === selectedMemoryId);
+  } else {
+    const nearest = findNearestAnniversary();
+    if (nearest) targetMem = memories.find(m => getNextAnniversary(m).days === nearest.days);
+  }
+
   if (!anni) {
     card.innerHTML = '<div class="no-countdown">🌟 添加你们的第一个纪念日吧</div>';
     card.onclick = null;
@@ -1355,23 +1372,25 @@ function renderCountdown() {
 
   const badgeHtml = isManual ? '<span class="countdown-badge">已选择</span>' : '';
   const labelPrefix = isManual
-    ? `<span>📌 ${escapeHtml(anni.title)}</span><span class="reset-hint">· 点击恢复自动</span>`
+    ? '<span>📌 ' + escapeHtml(anni.title) + '</span><span class="reset-hint">· 点击恢复自动</span>'
     : '⏳ 下一个纪念日';
 
+  // 纪念日天数：计算从创建日期到今天的天数
+  let sinceDays = '';
+  if (targetMem && (targetMem.tags || []).includes('纪念日')) {
+    const created = new Date(targetMem.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diff = Math.floor((today - created) / 86400000);
+    if (diff >= 0) {
+      sinceDays = '<div class="countdown-since">💝 已在一起 ' + diff + ' 天</div>';
+    }
+  }
+
   if (anni.isToday) {
-    card.innerHTML = `
-      <div class="countdown-label">🎉 今天就是${badgeHtml}</div>
-      <div class="countdown-days">今天!</div>
-      <div class="countdown-title">${escapeHtml(anni.title)}</div>
-      <div class="countdown-date">${anni.date.year}年${anni.date.month}月${anni.date.day}日</div>
-    `;
+    card.innerHTML = '\n      <div class="countdown-label">🎉 今天就是' + badgeHtml + '</div>\n      <div class="countdown-days">今天!</div>\n      <div class="countdown-title">' + escapeHtml(anni.title) + '</div>\n      <div class="countdown-date">' + anni.date.year + '年' + anni.date.month + '月' + anni.date.day + '日</div>\n      ' + sinceDays + '\n    ';
   } else {
-    card.innerHTML = `
-      <div class="countdown-label">${labelPrefix}${badgeHtml}</div>
-      <div class="countdown-days">${anni.days}<span>天</span></div>
-      <div class="countdown-title">${escapeHtml(anni.title)}</div>
-      <div class="countdown-date">${anni.date.year}年${anni.date.month}月${anni.date.day}日</div>
-    `;
+    card.innerHTML = '\n      <div class="countdown-label">' + labelPrefix + badgeHtml + '</div>\n      <div class="countdown-days">' + anni.days + '<span>天</span></div>\n      <div class="countdown-title">' + escapeHtml(anni.title) + '</div>\n      <div class="countdown-date">' + anni.date.year + '年' + anni.date.month + '月' + anni.date.day + '日</div>\n      ' + sinceDays + '\n    ';
   }
 
   // 如果手动选择状态，点击卡片恢复自动
