@@ -1235,15 +1235,7 @@ function sanitizeData(arr) {
   if (!arr || !arr.length) return [];
   return arr.filter(function(m) {
     if (!m || !m.title || m.title.length < 1) return false;
-    var codes = [];
-    for (var i = 0; i < m.title.length; i++) codes.push(m.title.charCodeAt(i));
-    var doubleCount = 0;
-    for (var i = 0; i < codes.length - 1; i++) {
-      if ((codes[i] === 0xC3 || codes[i] === 0xC2) && codes[i+1] >= 0x80 && codes[i+1] <= 0xBF) doubleCount++;
-    }
-    if (doubleCount > 2) return false;
     if (m.title.indexOf('\uFFFD') >= 0) return false;
-    if (/^\?+$/.test(m.title)) return false;
     return true;
   });
 }
@@ -1252,7 +1244,7 @@ function generateId() {
 }
 
 // ===================== 倒计时 =====================
-function getNextAnniversary(mem) { if (!mem || !mem.date) return null;
+function getNextAnniversary(mem) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -1343,7 +1335,7 @@ function findNearestAnniversary() {
 
   for (const mem of memories) {
     const anni = getNextAnniversary(mem);
-    if (anni && anni.days < minDays) {
+    if (anni.days < minDays) {
       minDays = anni.days;
       nearest = anni;
     }
@@ -1367,20 +1359,19 @@ function renderCountdown() {
   const anni = getTargetAnniversary();
   const isManual = selectedMemoryId !== null;
 
-  if (!anni) {
-    card.innerHTML = '<div class="no-countdown">馃専 娣诲姞浣犱滑鐨勭涓€涓邯蹇垫棩鍚?/div>';
-    card.onclick = null;
-    return;
-  }
-
+  // 获取当前选中的纪念日（用于计算纪念日天数）
   let targetMem = null;
   if (selectedMemoryId) {
     targetMem = memories.find(m => m.id === selectedMemoryId);
-  } else if (anni && anni.id) {
+  } else if (anni.id) {
     targetMem = memories.find(m => m.id === anni.id);
   }
 
-
+  if (!anni) {
+    card.innerHTML = '<div class="no-countdown">🌟 添加你们的第一个纪念日吧</div>';
+    card.onclick = null;
+    return;
+  }
 
   const badgeHtml = isManual ? '<span class="countdown-badge">已选择</span>' : '';
   const labelPrefix = isManual
@@ -1389,7 +1380,7 @@ function renderCountdown() {
 
   // 纪念日天数
   let sinceDays = '';
-  if (targetMem && targetMem.date) {
+  if (targetMem) {
     const parts = targetMem.date.split('-');
     const created = new Date(+parts[0], parts[1] - 1, +parts[2]);
     const today = new Date();
