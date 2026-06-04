@@ -1196,21 +1196,26 @@ let calType = 'solar'; // 'solar' | 'lunar'
 let photoData = null;
 let photoInputEl = null;
 
-// Auto-clean corrupted data
+// Clean corrupted data (double-encoded UTF-8)
 function sanitizeData(arr) {
   if (!arr || !arr.length) return [];
   return arr.filter(function(m) {
-    if (!m.title) return false;
-    if (m.title.indexOf('\uFFFD') >= 0) return false;
-    if (m.title.match(/\?{3,}/)) return false;
-    if (m.title.indexOf('\u00C3\u0083') >= 0) return false;
-    var bad = 0;
-    for (var i = 0; i < m.title.length; i++) {
-      var c = m.title.charCodeAt(i);
-      if (c === 0x00C3 || c === 0x0083 || c === 0x00C2 || c === 0x0082) bad++;
+    if (!m.title || m.title.length < 1) return false;
+    // Check for double-encoding markers
+    var codes = [];
+    for (var i = 0; i < m.title.length; i++) codes.push(m.title.charCodeAt(i));
+    // Double-encoded UTF-8 has patterns: 0xC3/0xC2 followed by 0x80-0xBF
+    var doubleCount = 0;
+    for (var i = 0; i < codes.length - 1; i++) {
+      if ((codes[i] === 0xC3 || codes[i] === 0xC2) && codes[i+1] >= 0x80 && codes[i+1] <= 0xBF) {
+        doubleCount++;
+      }
     }
-    if (bad > 3) return false;
-    if (m.title.length < 1) return false;
+    if (doubleCount > 2) return false;
+    // Check for replacement char
+    if (m.title.indexOf('\uFFFD') >= 0) return false;
+    // Check for all-question-mark titles
+    if (/^\?+$/.test(m.title)) return false;
     return true;
   });
 }
@@ -1241,7 +1246,7 @@ async function loadMemories() {
   }
 }
 
-async function saveMemories() { memories = sanitizeData(memories);
+async function saveMemories() { memories = sanitizeData(memories); memories = memories;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(memories));
   if (syncConfig.enabled) {
     pushToRemote().catch(e => console.warn('推送到云端失败:', e.message));
