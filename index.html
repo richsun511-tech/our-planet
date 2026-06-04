@@ -2392,8 +2392,7 @@ function init() {
     setupNotificationTimer();
   });
 
-  // 注册 Service Worker
-  registerSW();
+  // 暂时不注册 Service Worker，避免 iOS Safari 兼容问题
 
   // 音乐上传区域点击
   const musicZone = document.getElementById('musicUploadZone');
