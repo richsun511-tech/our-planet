@@ -146,7 +146,6 @@ body {
   width: 120px; height: 120px;
   margin: 0 auto 12px;
   position: relative;
-  cursor: pointer;
   perspective: 400px;
 }
 .planet-flip {
@@ -2054,13 +2053,10 @@ function saveAvatar(dataUrl) {
 
 function applyAvatar(dataUrl) {
   const back = document.getElementById('planetBack');
-  const hint = document.getElementById('avatarHint');
   if (dataUrl) {
     back.innerHTML = `<img src="${dataUrl}" alt="头像" />`;
-    hint.textContent = '点击星球翻转 👆';
   } else {
     back.innerHTML = '<span class="no-avatar">📷</span>';
-    hint.textContent = '点击星球设置头像';
   }
 }
 
