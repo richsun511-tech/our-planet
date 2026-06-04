@@ -1374,19 +1374,18 @@ function renderCountdown() {
   const isManual = selectedMemoryId !== null;
 
   // 获取当前选中的纪念日（用于计算纪念日天数）
+  if (!anni) {
+    card.innerHTML = '<div class="no-countdown">馃専 娣诲姞浣犱滑鐨勭涓€涓邯蹇垫棩鍚?/div>';
+    card.onclick = null;
+    return;
+  }
+
   let targetMem = null;
   if (selectedMemoryId) {
     targetMem = memories.find(m => m.id === selectedMemoryId);
   } else if (anni.id) {
     targetMem = memories.find(m => m.id === anni.id);
   }
-
-  if (!anni) {
-    card.innerHTML = '<div class="no-countdown">🌟 添加你们的第一个纪念日吧</div>';
-    card.onclick = null;
-    return;
-  }
-
   const badgeHtml = isManual ? '<span class="countdown-badge">已选择</span>' : '';
   const labelPrefix = isManual
     ? '<span>📌 ' + escapeHtml(anni.title) + '</span><span class="reset-hint">· 点击恢复自动</span>'
