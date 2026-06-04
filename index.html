@@ -1196,11 +1196,29 @@ let calType = 'solar'; // 'solar' | 'lunar'
 let photoData = null;
 let photoInputEl = null;
 
+// Auto-clean corrupted data
+function sanitizeData(arr) {
+  if (!arr || !arr.length) return [];
+  return arr.filter(function(m) {
+    if (!m.title) return false;
+    if (m.title.indexOf('\uFFFD') >= 0) return false;
+    if (m.title.match(/\?{3,}/)) return false;
+    if (m.title.indexOf('\u00C3\u0083') >= 0) return false;
+    var bad = 0;
+    for (var i = 0; i < m.title.length; i++) {
+      var c = m.title.charCodeAt(i);
+      if (c === 0x00C3 || c === 0x0083 || c === 0x00C2 || c === 0x0082) bad++;
+    }
+    if (bad > 3) return false;
+    if (m.title.length < 1) return false;
+    return true;
+  });
+}
 async function loadMemories() {
   // 1. 先读本地缓存
   try {
     const data = localStorage.getItem(STORAGE_KEY);
-    memories = data ? JSON.parse(data) : [];
+    memories = data ? sanitizeData(JSON.parse(data)) : [];
   } catch(e) {
     memories = [];
   }
@@ -1223,7 +1241,7 @@ async function loadMemories() {
   }
 }
 
-async function saveMemories() {
+async function saveMemories() { memories = sanitizeData(memories);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(memories));
   if (syncConfig.enabled) {
     pushToRemote().catch(e => console.warn('推送到云端失败:', e.message));
