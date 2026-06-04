@@ -1196,34 +1196,11 @@ let calType = 'solar'; // 'solar' | 'lunar'
 let photoData = null;
 let photoInputEl = null;
 
-// Clean corrupted data (double-encoded UTF-8)
-function sanitizeData(arr) {
-  if (!arr || !arr.length) return [];
-  return arr.filter(function(m) {
-    if (!m.title || m.title.length < 1) return false;
-    // Check for double-encoding markers
-    var codes = [];
-    for (var i = 0; i < m.title.length; i++) codes.push(m.title.charCodeAt(i));
-    // Double-encoded UTF-8 has patterns: 0xC3/0xC2 followed by 0x80-0xBF
-    var doubleCount = 0;
-    for (var i = 0; i < codes.length - 1; i++) {
-      if ((codes[i] === 0xC3 || codes[i] === 0xC2) && codes[i+1] >= 0x80 && codes[i+1] <= 0xBF) {
-        doubleCount++;
-      }
-    }
-    if (doubleCount > 2) return false;
-    // Check for replacement char
-    if (m.title.indexOf('\uFFFD') >= 0) return false;
-    // Check for all-question-mark titles
-    if (/^\?+$/.test(m.title)) return false;
-    return true;
-  });
-}
 async function loadMemories() {
   // 1. 先读本地缓存
   try {
     const data = localStorage.getItem(STORAGE_KEY);
-    memories = data ? sanitizeData(JSON.parse(data)) : [];
+    memories = data ? JSON.parse(data) : [];
   } catch(e) {
     memories = [];
   }
@@ -1246,19 +1223,36 @@ async function loadMemories() {
   }
 }
 
-async function saveMemories() { memories = sanitizeData(memories); memories = memories;
+async function saveMemories() { memories = sanitizeData(memories);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(memories));
   if (syncConfig.enabled) {
     pushToRemote().catch(e => console.warn('推送到云端失败:', e.message));
   }
 }
 
+
+function sanitizeData(arr) {
+  if (!arr || !arr.length) return [];
+  return arr.filter(function(m) {
+    if (!m || !m.title || m.title.length < 1) return false;
+    var codes = [];
+    for (var i = 0; i < m.title.length; i++) codes.push(m.title.charCodeAt(i));
+    var doubleCount = 0;
+    for (var i = 0; i < codes.length - 1; i++) {
+      if ((codes[i] === 0xC3 || codes[i] === 0xC2) && codes[i+1] >= 0x80 && codes[i+1] <= 0xBF) doubleCount++;
+    }
+    if (doubleCount > 2) return false;
+    if (m.title.indexOf('\uFFFD') >= 0) return false;
+    if (/^\?+$/.test(m.title)) return false;
+    return true;
+  });
+}
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
 }
 
 // ===================== 倒计时 =====================
-function getNextAnniversary(mem) {
+function getNextAnniversary(mem) { if (!mem || !mem.date) return null;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -1349,7 +1343,7 @@ function findNearestAnniversary() {
 
   for (const mem of memories) {
     const anni = getNextAnniversary(mem);
-    if (anni.days < minDays) {
+    if (anni && anni.days < minDays) {
       minDays = anni.days;
       nearest = anni;
     }
@@ -1374,18 +1368,19 @@ function renderCountdown() {
   const isManual = selectedMemoryId !== null;
 
   // 获取当前选中的纪念日（用于计算纪念日天数）
-  if (!anni) {
-    card.innerHTML = '<div class="no-countdown">馃専 娣诲姞浣犱滑鐨勭涓€涓邯蹇垫棩鍚?/div>';
-    card.onclick = null;
-    return;
-  }
-
   let targetMem = null;
   if (selectedMemoryId) {
     targetMem = memories.find(m => m.id === selectedMemoryId);
   } else if (anni.id) {
     targetMem = memories.find(m => m.id === anni.id);
   }
+
+  if (!anni) {
+    card.innerHTML = '<div class="no-countdown">🌟 添加你们的第一个纪念日吧</div>';
+    card.onclick = null;
+    return;
+  }
+
   const badgeHtml = isManual ? '<span class="countdown-badge">已选择</span>' : '';
   const labelPrefix = isManual
     ? '<span>📌 ' + escapeHtml(anni.title) + '</span><span class="reset-hint">· 点击恢复自动</span>'
@@ -1393,7 +1388,7 @@ function renderCountdown() {
 
   // 纪念日天数
   let sinceDays = '';
-  if (targetMem) {
+  if (targetMem && targetMem.date) {
     const parts = targetMem.date.split('-');
     const created = new Date(+parts[0], parts[1] - 1, +parts[2]);
     const today = new Date();
