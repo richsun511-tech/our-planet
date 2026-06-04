@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -7,12 +7,12 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>我们的星球</title>
+<title>鎴戜滑鐨勬槦鐞?/title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="我们的星球">
+<meta name="apple-mobile-web-app-title" content="鎴戜滑鐨勬槦鐞?>
 <meta name="theme-color" content="#0a0a1a">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><defs><radialGradient id='g' cx='35%25' cy='35%25'><stop offset='0%25' stop-color='%23ff8aaf'/><stop offset='20%25' stop-color='%23ff6b9d'/><stop offset='60%25' stop-color='%23c0392b'/><stop offset='90%25' stop-color='%235a1033'/><stop offset='100%25' stop-color='%230a0a1a'/></radialGradient></defs><circle cx='90' cy='90' r='85' fill='url(%23g)'/><text x='90' y='125' text-anchor='middle' fill='white' font-size='16' font-family='sans-serif'>🌍</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><defs><radialGradient id='g' cx='35%25' cy='35%25'><stop offset='0%25' stop-color='%23ff8aaf'/><stop offset='20%25' stop-color='%23ff6b9d'/><stop offset='60%25' stop-color='%23c0392b'/><stop offset='90%25' stop-color='%235a1033'/><stop offset='100%25' stop-color='%230a0a1a'/></radialGradient></defs><circle cx='90' cy='90' r='85' fill='url(%23g)'/><text x='90' y='125' text-anchor='middle' fill='white' font-size='16' font-family='sans-serif'>馃實</text></svg>">
 <style>
 :root {
   --bg: #0a0a1a;
@@ -343,131 +343,130 @@ body {
 <div class="stars" id="stars"></div>
 <div class="app-container">
   <div class="planet-header">
-    <button class="settings-btn" onclick="openSyncModal()" title="云同步设置">⚙️</button>
-    <button class="calendar-btn" onclick="syncToCalendar()" title="同步到苹果日历">📅</button>
-    <button class="notify-btn" id="notifyBtn" onclick="requestNotification()" title="开启消息提醒">🔔</button>
-    <div class="planet" onclick="togglePlanetFlip();toggleMusic()" title="点击翻转">
+    <button class="settings-btn" onclick="openSyncModal()" title="浜戝悓姝ヨ缃?>鈿欙笍</button>
+    <button class="calendar-btn" onclick="syncToCalendar()" title="鍚屾鍒拌嫻鏋滄棩鍘?>馃搮</button>
+    <button class="notify-btn" id="notifyBtn" onclick="requestNotification()" title="寮€鍚秷鎭彁閱?>馃敂</button>
+    <div class="planet" onclick="togglePlanetFlip();toggleMusic()" title="鐐瑰嚮缈昏浆">
       <div class="planet-flip" id="planetFlip">
         <div class="planet-front"></div>
         <div class="planet-back" id="planetBack">
-          <span class="no-avatar">📷</span>
+          <span class="no-avatar">馃摲</span>
         </div>
       </div>
       <div class="planet-ring"></div>
     </div>
-    <div class="planet-title">我们的星球</div>
-    <div class="planet-subtitle">每一颗果实，都是我们的回忆</div>
+    <div class="planet-title">鎴戜滑鐨勬槦鐞?/div>
+    <div class="planet-subtitle">姣忎竴棰楁灉瀹烇紝閮芥槸鎴戜滑鐨勫洖蹇?/div>
     <div class="sync-status" id="syncStatus"></div>
   </div>
   <div class="countdown-card" id="countdownCard"></div>
   <div class="tag-bar" id="tagBar">
-    <div class="tag-chip active" data-tag="all">全部</div>
-    <div class="tag-chip" data-tag="生日">生日</div>
-    <div class="tag-chip" data-tag="纪念日">纪念日</div>
-    <div class="tag-chip" data-tag="第一次">第一次</div>
-    <div class="tag-chip" data-tag="旅行">旅行</div>
-    <div class="tag-chip" data-tag="日常">日常</div>
-    <div class="tag-chip" data-tag="惊喜">惊喜</div>
-    <div class="tag-chip" data-tag="其他">其他</div>
+    <div class="tag-chip active" data-tag="all">鍏ㄩ儴</div>
+    <div class="tag-chip" data-tag="鐢熸棩">鐢熸棩</div>
+    <div class="tag-chip" data-tag="绾康鏃?>绾康鏃?/div>
+    <div class="tag-chip" data-tag="绗竴娆?>绗竴娆?/div>
+    <div class="tag-chip" data-tag="鏃呰">鏃呰</div>
+    <div class="tag-chip" data-tag="鏃ュ父">鏃ュ父</div>
+    <div class="tag-chip" data-tag="鎯婂枩">鎯婂枩</div>
+    <div class="tag-chip" data-tag="鍏朵粬">鍏朵粬</div>
   </div>
   <div class="memory-count" id="memoryCount"></div>
   <div class="timeline" id="timeline"></div>
   <div class="empty-state" id="emptyState" style="display:none;">
-    <div class="empty-icon">🌱</div>
-    <div class="empty-text">还没有记忆果实<br>点击下方按钮种下第一颗吧</div>
+    <div class="empty-icon">馃尡</div>
+    <div class="empty-text">杩樻病鏈夎蹇嗘灉瀹?br>鐐瑰嚮涓嬫柟鎸夐挳绉嶄笅绗竴棰楀惂</div>
   </div>
 </div>
-<div class="fab"><button class="fab-btn" onclick="openAddModal()" title="添加纪念日">+</button></div>
+<div class="fab"><button class="fab-btn" onclick="openAddModal()" title="娣诲姞绾康鏃?>+</button></div>
 
-<!-- 添加/编辑弹窗 -->
+<!-- 娣诲姞/缂栬緫寮圭獥 -->
 <div class="modal-overlay" id="addModal" style="display:none;" onclick="if(event.target===this)closeAddModal()">
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="modalTitle">🌱 种下一颗记忆果实</div>
+    <div class="modal-title" id="modalTitle">馃尡 绉嶄笅涓€棰楄蹇嗘灉瀹?/div>
     <div class="form-group">
-      <label class="form-label">日历类型</label>
+      <label class="form-label">鏃ュ巻绫诲瀷</label>
       <div class="cal-type-toggle" id="calTypeToggle">
-        <button class="active" data-type="solar" onclick="setCalType('solar')">☀️ 阳历</button>
-        <button data-type="lunar" onclick="setCalType('lunar')">🌙 阴历</button>
+        <button class="active" data-type="solar" onclick="setCalType('solar')">鈽€锔?闃冲巻</button>
+        <button data-type="lunar" onclick="setCalType('lunar')">馃寵 闃村巻</button>
       </div>
     </div>
     <div class="form-group" id="solarDateGroup">
-      <label class="form-label">日期</label>
+      <label class="form-label">鏃ユ湡</label>
       <input class="form-input" type="date" id="memDate">
     </div>
     <div id="lunarDateGroup" style="display:none;">
       <div class="date-row">
-        <div class="form-group"><label class="form-label">年份</label><select class="form-select" id="lunarYear"></select></div>
-        <div class="form-group"><label class="form-label">月份</label><select class="form-select" id="lunarMonth"></select></div>
-        <div class="form-group"><label class="form-label">日期</label><select class="form-select" id="lunarDay"></select></div>
+        <div class="form-group"><label class="form-label">骞翠唤</label><select class="form-select" id="lunarYear"></select></div>
+        <div class="form-group"><label class="form-label">鏈堜唤</label><select class="form-select" id="lunarMonth"></select></div>
+        <div class="form-group"><label class="form-label">鏃ユ湡</label><select class="form-select" id="lunarDay"></select></div>
       </div>
     </div>
-    <div class="form-group"><label class="form-label">标题</label><input class="form-input" type="text" id="memTitle" placeholder="给这个日子取个名字..." maxlength="30"></div>
-    <div class="form-group"><label class="form-label">想说的话</label><textarea class="form-textarea" id="memText" placeholder="写下你想说的话..." maxlength="500"></textarea></div>
+    <div class="form-group"><label class="form-label">鏍囬</label><input class="form-input" type="text" id="memTitle" placeholder="缁欒繖涓棩瀛愬彇涓悕瀛?.." maxlength="30"></div>
+    <div class="form-group"><label class="form-label">鎯宠鐨勮瘽</label><textarea class="form-textarea" id="memText" placeholder="鍐欎笅浣犳兂璇寸殑璇?.." maxlength="500"></textarea></div>
     <div class="form-group">
-      <label class="form-label">照片（可选）</label>
+      <label class="form-label">鐓х墖锛堝彲閫夛級</label>
       <div class="photo-upload" id="photoUpload" onclick="document.getElementById('photoInput').click()">
-        <span class="photo-upload-icon">📷</span><span class="photo-upload-text">点击上传照片</span>
+        <span class="photo-upload-icon">馃摲</span><span class="photo-upload-text">鐐瑰嚮涓婁紶鐓х墖</span>
       </div>
       <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="handlePhotoSelect(event)">
     </div>
     <div class="form-group">
-      <label class="form-label">标签（可多选）</label>
+      <label class="form-label">鏍囩锛堝彲澶氶€夛級</label>
       <div class="tag-select" id="tagSelect">
-        <div class="tag-option" data-tag="生日" onclick="toggleTag('生日',this)">生日</div>
-        <div class="tag-option" data-tag="纪念日" onclick="toggleTag('纪念日',this)">纪念日</div>
-        <div class="tag-option" data-tag="第一次" onclick="toggleTag('第一次',this)">第一次</div>
-        <div class="tag-option" data-tag="旅行" onclick="toggleTag('旅行',this)">旅行</div>
-        <div class="tag-option" data-tag="日常" onclick="toggleTag('日常',this)">日常</div>
-        <div class="tag-option" data-tag="惊喜" onclick="toggleTag('惊喜',this)">惊喜</div>
-        <div class="tag-option" data-tag="其他" onclick="toggleTag('其他',this)">其他</div>
+        <div class="tag-option" data-tag="鐢熸棩" onclick="toggleTag('鐢熸棩',this)">鐢熸棩</div>
+        <div class="tag-option" data-tag="绾康鏃? onclick="toggleTag('绾康鏃?,this)">绾康鏃?/div>
+        <div class="tag-option" data-tag="绗竴娆? onclick="toggleTag('绗竴娆?,this)">绗竴娆?/div>
+        <div class="tag-option" data-tag="鏃呰" onclick="toggleTag('鏃呰',this)">鏃呰</div>
+        <div class="tag-option" data-tag="鏃ュ父" onclick="toggleTag('鏃ュ父',this)">鏃ュ父</div>
+        <div class="tag-option" data-tag="鎯婂枩" onclick="toggleTag('鎯婂枩',this)">鎯婂枩</div>
+        <div class="tag-option" data-tag="鍏朵粬" onclick="toggleTag('鍏朵粬',this)">鍏朵粬</div>
       </div>
     </div>
     <div class="btn-row">
-      <button class="btn btn-ghost btn-delete" id="btnDelete" onclick="deleteMemory()">删除</button>
-      <button class="btn btn-primary" onclick="saveMemory()">种下果实 ✨</button>
-      <button class="btn btn-ghost" onclick="closeAddModal()">取消</button>
+      <button class="btn btn-ghost btn-delete" id="btnDelete" onclick="deleteMemory()">鍒犻櫎</button>
+      <button class="btn btn-primary" onclick="saveMemory()">绉嶄笅鏋滃疄 鉁?/button>
+      <button class="btn btn-ghost" onclick="closeAddModal()">鍙栨秷</button>
     </div>
   </div>
 </div>
 
-<!-- 云同步设置弹窗 -->
+<!-- 浜戝悓姝ヨ缃脊绐?-->
 <div class="modal-overlay" id="syncModal" style="display:none;" onclick="if(event.target===this)closeSyncModal()">
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
-    <div class="modal-title">☁️ 云端同步设置</div>
+    <div class="modal-title">鈽侊笍 浜戠鍚屾璁剧疆</div>
     <div style="margin-bottom:16px;padding:12px;border-radius:12px;background:rgba(87,217,163,0.1);font-size:13px;color:var(--text2);line-height:1.6;" id="syncHelp">
-      💡 首次使用需输入 GitHub Token 启用同步。<br>你和女朋友用同一链接打开，数据自动互通。
-    </div>
+      馃挕 棣栨浣跨敤闇€杈撳叆 GitHub Token 鍚敤鍚屾銆?br>浣犲拰濂虫湅鍙嬬敤鍚屼竴閾炬帴鎵撳紑锛屾暟鎹嚜鍔ㄤ簰閫氥€?    </div>
     <div class="form-group" id="tokenGroup">
       <label class="form-label">GitHub Token</label>
       <input class="form-input" type="password" id="syncToken" placeholder="ghp_xxxxxxxxxxxx">
     </div>
     <div class="form-group">
-      <label class="form-label">💑 情侣头像（点击星球可翻转查看）</label>
+      <label class="form-label">馃拺 鎯呬荆澶村儚锛堢偣鍑绘槦鐞冨彲缈昏浆鏌ョ湅锛?/label>
       <div class="photo-upload" id="avatarUpload" onclick="document.getElementById('avatarInput').click()" style="width:120px;height:120px;border-radius:50%;margin:0 auto;">
-        <span class="photo-upload-icon">📷</span><span class="photo-upload-text" style="font-size:11px;">上传头像</span>
+        <span class="photo-upload-icon">馃摲</span><span class="photo-upload-text" style="font-size:11px;">涓婁紶澶村儚</span>
       </div>
       <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="handleAvatarSelect(event)">
     </div>
     <div class="form-group">
-      <label class="form-label">🎵 背景音乐（点击星球轮流播放）</label>
+      <label class="form-label">馃幍 鑳屾櫙闊充箰锛堢偣鍑绘槦鐞冭疆娴佹挱鏀撅級</label>
       <div class="music-upload-zone" id="musicUploadZone">
-        <span style="font-size:13px;color:var(--text2);" id="musicLabel">点击上传音乐文件（支持 mp3）</span>
+        <span style="font-size:13px;color:var(--text2);" id="musicLabel">鐐瑰嚮涓婁紶闊充箰鏂囦欢锛堟敮鎸?mp3锛?/span>
       </div>
       <input type="file" id="musicInput" accept="audio/*,.mp3,.m4a,.wav,.aac,.flac" style="display:none;" onchange="handleMusicSelect(event)">
     </div>
     <div id="syncState" style="text-align:center;font-size:13px;color:var(--text2);margin-bottom:12px;"></div>
     <div class="btn-row">
-      <button class="btn btn-primary" onclick="saveSyncSettings()">💾 保存并同步</button>
-      <button class="btn btn-ghost" id="btnDisableSync" style="display:none;" onclick="disableSync()">断开同步</button>
-      <button class="btn btn-ghost" onclick="closeSyncModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveSyncSettings()">馃捑 淇濆瓨骞跺悓姝?/button>
+      <button class="btn btn-ghost" id="btnDisableSync" style="display:none;" onclick="disableSync()">鏂紑鍚屾</button>
+      <button class="btn btn-ghost" onclick="closeSyncModal()">鍙栨秷</button>
     </div>
   </div>
 </div>
 
 <script>
-// ===================== 农历算法 =====================
+// ===================== 鍐滃巻绠楁硶 =====================
 const LUNAR_INFO = [
   0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,
   0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,
@@ -490,10 +489,10 @@ const LUNAR_INFO = [
   0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,
   0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a4d0,0x0d150,0x0f252,0x0d520
 ];
-const LUNAR_MONTH_STR = ['','正月','二月','三月','四月','五月','六月','七月','八月','九月','十月','冬月','腊月'];
-const LUNAR_DAY_STR = ['','初一','初二','初三','初四','初五','初六','初七','初八','初九','初十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
-const STEM = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
-const BRANCH = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const LUNAR_MONTH_STR = ['','姝ｆ湀','浜屾湀','涓夋湀','鍥涙湀','浜旀湀','鍏湀','涓冩湀','鍏湀','涔濇湀','鍗佹湀','鍐湀','鑵婃湀'];
+const LUNAR_DAY_STR = ['','鍒濅竴','鍒濅簩','鍒濅笁','鍒濆洓','鍒濅簲','鍒濆叚','鍒濅竷','鍒濆叓','鍒濅節','鍒濆崄','鍗佷竴','鍗佷簩','鍗佷笁','鍗佸洓','鍗佷簲','鍗佸叚','鍗佷竷','鍗佸叓','鍗佷節','浜屽崄','寤夸竴','寤夸簩','寤夸笁','寤垮洓','寤夸簲','寤垮叚','寤夸竷','寤垮叓','寤夸節','涓夊崄'];
+const STEM = ['鐢?,'涔?,'涓?,'涓?,'鎴?,'宸?,'搴?,'杈?,'澹?,'鐧?];
+const BRANCH = ['瀛?,'涓?,'瀵?,'鍗?,'杈?,'宸?,'鍗?,'鏈?,'鐢?,'閰?,'鎴?,'浜?];
 
 function getLunarYearInfo(year) { return LUNAR_INFO[year - 1900]; }
 function getLeapMonth(year) { return getLunarYearInfo(year) & 0xf; }
@@ -537,9 +536,9 @@ function solarToLunar(year, month, day) {
   return {
     year: lunarYear, month: Math.min(lunarMonth, 12), day: Math.min(lunarDay, 30),
     isLeap: isLeap,
-    monthStr: (isLeap ? '闰' : '') + LUNAR_MONTH_STR[Math.min(lunarMonth, 12)],
+    monthStr: (isLeap ? '闂? : '') + LUNAR_MONTH_STR[Math.min(lunarMonth, 12)],
     dayStr: LUNAR_DAY_STR[Math.min(lunarDay, 30)],
-    yearStr: STEM[(lunarYear - 4) % 10] + BRANCH[(lunarYear - 4) % 12] + '年'
+    yearStr: STEM[(lunarYear - 4) % 10] + BRANCH[(lunarYear - 4) % 12] + '骞?
   };
 }
 
@@ -570,7 +569,7 @@ function lunarToSolar(lunarYear, lunarMonth, lunarDay, isLeap) {
   return { year: lunarYear, month: 1, day: 1 };
 }
 
-// ===================== 数据存储 =====================
+// ===================== 鏁版嵁瀛樺偍 =====================
 const STORAGE_KEY = 'our_planet_memories';
 const AVATAR_KEY = 'our_planet_avatar';
 const MUSIC_KEY = 'our_planet_music';
@@ -659,7 +658,7 @@ async function saveMemories() {
 
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 6); }
 
-// ===================== 倒计时 =====================
+// ===================== 鍊掕鏃?=====================
 function getNextAnniversary(mem) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   let targetDate;
@@ -702,31 +701,31 @@ function renderCountdown() {
   const anni = getTargetAnniversary();
   const isManual = selectedMemoryId !== null;
   let targetMem = selectedMemoryId ? memories.find(m => m.id === selectedMemoryId) : (anni && anni.id ? memories.find(m => m.id === anni.id) : null);
-  if (!anni) { card.innerHTML = '<div class="no-countdown">🌟 添加你们的第一个纪念日吧</div>'; card.onclick = null; return; }
-  const badgeHtml = isManual ? '<span class="countdown-badge">已选择</span>' : '';
-  const labelPrefix = isManual ? '<span>📌 ' + escapeHtml(anni.title) + '</span><span class="reset-hint">· 点击恢复自动</span>' : '⏳ 下一个纪念日';
+  if (!anni) { card.innerHTML = '<div class="no-countdown">馃専 娣诲姞浣犱滑鐨勭涓€涓邯蹇垫棩鍚?/div>'; card.onclick = null; return; }
+  const badgeHtml = isManual ? '<span class="countdown-badge">宸查€夋嫨</span>' : '';
+  const labelPrefix = isManual ? '<span>馃搶 ' + escapeHtml(anni.title) + '</span><span class="reset-hint">路 鐐瑰嚮鎭㈠鑷姩</span>' : '鈴?涓嬩竴涓邯蹇垫棩';
   let sinceDays = '';
   if (targetMem) {
     const parts = targetMem.date.split('-');
     const created = new Date(+parts[0], parts[1] - 1, +parts[2]);
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const diff = Math.floor((today - created) / 86400000);
-    if (diff >= 0) sinceDays = '<div class="countdown-since">💝 距今已有 ' + diff + ' 天</div>';
+    if (diff >= 0) sinceDays = '<div class="countdown-since">馃挐 璺濅粖宸叉湁 ' + diff + ' 澶?/div>';
   }
   if (anni.isToday) {
-    card.innerHTML = '<div class="countdown-label">🎉 今天就是' + badgeHtml + '</div><div class="countdown-days">今天!</div><div class="countdown-title">' + escapeHtml(anni.title) + '</div><div class="countdown-date">' + anni.date.year + '年' + anni.date.month + '月' + anni.date.day + '日</div>' + sinceDays;
+    card.innerHTML = '<div class="countdown-label">馃帀 浠婂ぉ灏辨槸' + badgeHtml + '</div><div class="countdown-days">浠婂ぉ!</div><div class="countdown-title">' + escapeHtml(anni.title) + '</div><div class="countdown-date">' + anni.date.year + '骞? + anni.date.month + '鏈? + anni.date.day + '鏃?/div>' + sinceDays;
   } else {
-    card.innerHTML = '<div class="countdown-label">' + labelPrefix + badgeHtml + '</div><div class="countdown-days">' + anni.days + '<span>天</span></div><div class="countdown-title">' + escapeHtml(anni.title) + '</div><div class="countdown-date">' + anni.date.year + '年' + anni.date.month + '月' + anni.date.day + '日</div>' + sinceDays;
+    card.innerHTML = '<div class="countdown-label">' + labelPrefix + badgeHtml + '</div><div class="countdown-days">' + anni.days + '<span>澶?/span></div><div class="countdown-title">' + escapeHtml(anni.title) + '</div><div class="countdown-date">' + anni.date.year + '骞? + anni.date.month + '鏈? + anni.date.day + '鏃?/div>' + sinceDays;
   }
   card.onclick = isManual ? () => { selectedMemoryId = null; renderAll(); } : null;
 }
 
-function getTagClass(tag) { const m = { '生日':'love','第一次':'first','旅行':'travel','纪念日':'love','日常':'other','惊喜':'love','其他':'other' }; return m[tag] || 'other'; }
+function getTagClass(tag) { const m = { '鐢熸棩':'love','绗竴娆?:'first','鏃呰':'travel','绾康鏃?:'love','鏃ュ父':'other','鎯婂枩':'love','鍏朵粬':'other' }; return m[tag] || 'other'; }
 
 function formatDateShort(dateStr) {
   const parts = dateStr.split('-');
   const d = new Date(+parts[0], parts[1] - 1, +parts[2]);
-  return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日';
+  return d.getFullYear() + '骞? + (d.getMonth() + 1) + '鏈? + d.getDate() + '鏃?;
 }
 
 function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
@@ -740,16 +739,16 @@ function renderTimeline() {
   if (!filtered.length) { tl.innerHTML = ''; empty.style.display = 'block'; countEl.textContent = ''; }
   else {
     empty.style.display = 'none';
-    countEl.textContent = '共 ' + filtered.length + ' 颗记忆果实' + (currentFilter !== 'all' ? ' · 筛选: ' + currentFilter : '');
+    countEl.textContent = '鍏?' + filtered.length + ' 棰楄蹇嗘灉瀹? + (currentFilter !== 'all' ? ' 路 绛涢€? ' + currentFilter : '');
   }
   tl.innerHTML = filtered.map(mem => {
     const tagsHtml = (mem.tags || []).map(t => '<span class="memory-tag ' + getTagClass(t) + '">' + t + '</span>').join('');
-    const dateDisplay = mem.calType === 'lunar' ? formatDateShort(mem.date) + ' · 🌙 ' + (mem.lunarDisplay || '') : formatDateShort(mem.date);
+    const dateDisplay = mem.calType === 'lunar' ? formatDateShort(mem.date) + ' 路 馃寵 ' + (mem.lunarDisplay || '') : formatDateShort(mem.date);
     const imageHtml = mem.photo ? '<img class="memory-card-image" src="' + mem.photo + '" alt="">' : '';
     const isActive = selectedMemoryId === mem.id;
     const anni = getNextAnniversary(mem);
-    const badge = anni.isToday ? '🎉 今天' : '倒计时 ' + anni.days + ' 天';
-    return '<div class="timeline-item" data-id="' + mem.id + '"><div class="timeline-dot" style="border-color:var(--accent);color:var(--accent)"></div><div class="memory-card' + (isActive ? ' active-card' : '') + '" onclick="selectMemoryForCountdown(\'' + mem.id + '\')">' + imageHtml + '<div class="memory-card-body"><button style="position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:var(--text2);font-size:14px;cursor:pointer;z-index:2;" onclick="event.stopPropagation();openDetail(\'' + mem.id + '\')">⋯</button><div class="memory-card-tags">' + tagsHtml + '</div><div class="memory-card-date">' + dateDisplay + '<span style="float:right;font-size:11px;color:var(--accent2);">' + badge + '</span></div><div class="memory-card-title">' + escapeHtml(mem.title) + '</div>' + (mem.text ? '<div class="memory-card-text">' + escapeHtml(mem.text.length > 80 ? mem.text.substring(0, 80) + '...' : mem.text) + '</div>' : '') + '</div></div></div>';
+    const badge = anni.isToday ? '馃帀 浠婂ぉ' : '鍊掕鏃?' + anni.days + ' 澶?;
+    return '<div class="timeline-item" data-id="' + mem.id + '"><div class="timeline-dot" style="border-color:var(--accent);color:var(--accent)"></div><div class="memory-card' + (isActive ? ' active-card' : '') + '" onclick="selectMemoryForCountdown(\'' + mem.id + '\')">' + imageHtml + '<div class="memory-card-body"><button style="position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:var(--text2);font-size:14px;cursor:pointer;z-index:2;" onclick="event.stopPropagation();openDetail(\'' + mem.id + '\')">鈰?/button><div class="memory-card-tags">' + tagsHtml + '</div><div class="memory-card-date">' + dateDisplay + '<span style="float:right;font-size:11px;color:var(--accent2);">' + badge + '</span></div><div class="memory-card-title">' + escapeHtml(mem.title) + '</div>' + (mem.text ? '<div class="memory-card-text">' + escapeHtml(mem.text.length > 80 ? mem.text.substring(0, 80) + '...' : mem.text) + '</div>' : '') + '</div></div></div>';
   }).join('');
 }
 
@@ -769,7 +768,7 @@ function initTagBar() {
 
 function selectMemoryForCountdown(id) { selectedMemoryId = selectedMemoryId === id ? null : id; renderAll(); }
 
-// ===================== 弹窗 =====================
+// ===================== 寮圭獥 =====================
 function openAddModal(editId) {
   editingId = editId || null; selectedTags = []; photoData = null;
   initLunarYearOptions(); initLunarMonthOptions(new Date().getFullYear()); updateLunarDayOptions();
@@ -788,7 +787,7 @@ function openAddModal(editId) {
       selectedTags = [...(mem.tags || [])]; photoData = mem.photo || null;
       setCalType(calType); updateTagUI(); updatePhotoPreview();
       document.getElementById('btnDelete').classList.add('visible');
-      document.getElementById('modalTitle').textContent = '✏️ 编辑记忆果实';
+      document.getElementById('modalTitle').textContent = '鉁忥笍 缂栬緫璁板繂鏋滃疄';
     }
   } else {
     document.getElementById('memDate').value = new Date().toISOString().split('T')[0];
@@ -796,7 +795,7 @@ function openAddModal(editId) {
     calType = 'solar'; photoData = null;
     setCalType('solar'); updateTagUI(); updatePhotoPreview();
     document.getElementById('btnDelete').classList.remove('visible');
-    document.getElementById('modalTitle').textContent = '🌱 种下一颗记忆果实';
+    document.getElementById('modalTitle').textContent = '馃尡 绉嶄笅涓€棰楄蹇嗘灉瀹?;
   }
   document.getElementById('addModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -806,7 +805,7 @@ function closeAddModal() { document.getElementById('addModal').style.display = '
 
 function initLunarYearOptions() {
   const sel = document.getElementById('lunarYear'); sel.innerHTML = '';
-  for (let y = 1900; y <= new Date().getFullYear(); y++) sel.innerHTML += '<option value="' + y + '">' + y + '年</option>';
+  for (let y = 1900; y <= new Date().getFullYear(); y++) sel.innerHTML += '<option value="' + y + '">' + y + '骞?/option>';
   sel.value = new Date().getFullYear();
 }
 
@@ -815,7 +814,7 @@ function initLunarMonthOptions(lunarYear) {
   const leap = getLeapMonth(year); sel.innerHTML = '';
   for (let m = 1; m <= 12; m++) {
     sel.innerHTML += '<option value="' + m + '">' + LUNAR_MONTH_STR[m] + '</option>';
-    if (leap === m) sel.innerHTML += '<option value="r' + m + '">闰' + LUNAR_MONTH_STR[m] + '</option>';
+    if (leap === m) sel.innerHTML += '<option value="r' + m + '">闂? + LUNAR_MONTH_STR[m] + '</option>';
   }
 }
 
@@ -869,13 +868,13 @@ function handlePhotoSelect(event) {
 
 function updatePhotoPreview() {
   const upload = document.getElementById('photoUpload');
-  upload.innerHTML = photoData ? '<img src="' + photoData + '" alt="预览">' : '<span class="photo-upload-icon">📷</span><span class="photo-upload-text">点击上传照片</span>';
+  upload.innerHTML = photoData ? '<img src="' + photoData + '" alt="棰勮">' : '<span class="photo-upload-icon">馃摲</span><span class="photo-upload-text">鐐瑰嚮涓婁紶鐓х墖</span>';
 }
 
 function saveMemory() {
   const title = document.getElementById('memTitle').value.trim();
   const text = document.getElementById('memText').value.trim();
-  if (!title) { alert('请输入标题'); return; }
+  if (!title) { alert('璇疯緭鍏ユ爣棰?); return; }
   let dateVal, lunarYear, lunarMonth, lunarDay, isLeap, lunarDisplay;
   if (calType === 'lunar') {
     lunarYear = parseInt(document.getElementById('lunarYear').value);
@@ -885,9 +884,9 @@ function saveMemory() {
     lunarDay = parseInt(document.getElementById('lunarDay').value);
     const solar = lunarToSolar(lunarYear, lunarMonth, lunarDay, isLeap);
     dateVal = solar.year + '-' + String(solar.month).padStart(2, '0') + '-' + String(solar.day).padStart(2, '0');
-    lunarDisplay = STEM[(lunarYear - 4) % 10] + BRANCH[(lunarYear - 4) % 12] + '年 ' + (isLeap ? '闰' : '') + LUNAR_MONTH_STR[lunarMonth] + LUNAR_DAY_STR[lunarDay];
+    lunarDisplay = STEM[(lunarYear - 4) % 10] + BRANCH[(lunarYear - 4) % 12] + '骞?' + (isLeap ? '闂? : '') + LUNAR_MONTH_STR[lunarMonth] + LUNAR_DAY_STR[lunarDay];
   } else {
-    dateVal = document.getElementById('memDate').value; if (!dateVal) { alert('请选择日期'); return; }
+    dateVal = document.getElementById('memDate').value; if (!dateVal) { alert('璇烽€夋嫨鏃ユ湡'); return; }
     isLeap = false; lunarYear = null; lunarMonth = null; lunarDay = null; lunarDisplay = null;
   }
   const mem = { id: editingId || generateId(), date: dateVal, title, text, tags: selectedTags, calType, isLeap, lunarYear, lunarMonth, lunarDay, lunarDisplay, photo: photoData, createdAt: editingId ? (memories.find(m => m.id === editingId)?.createdAt || new Date().toISOString()) : new Date().toISOString() };
@@ -898,7 +897,7 @@ function saveMemory() {
 
 function deleteMemory() {
   if (!editingId) return;
-  if (confirm('确定删除吗？')) {
+  if (confirm('纭畾鍒犻櫎鍚楋紵')) {
     memories = memories.filter(m => m.id !== editingId);
     if (selectedMemoryId === editingId) selectedMemoryId = null;
     saveMemories(); closeAddModal(); renderAll();
@@ -907,16 +906,16 @@ function deleteMemory() {
 
 function openDetail(id) {
   const mem = memories.find(m => m.id === id); if (!mem) return;
-  const dateDisplay = mem.calType === 'lunar' ? formatDateShort(mem.date) + ' · 🌙 ' + (mem.lunarDisplay || '') : formatDateShort(mem.date);
+  const dateDisplay = mem.calType === 'lunar' ? formatDateShort(mem.date) + ' 路 馃寵 ' + (mem.lunarDisplay || '') : formatDateShort(mem.date);
   const tagsHtml = (mem.tags || []).map(t => '<span class="memory-tag ' + getTagClass(t) + '">' + t + '</span>').join('');
   const overlay = document.createElement('div');
   overlay.className = 'detail-overlay';
   overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
-  overlay.innerHTML = '<div class="detail-card">' + (mem.photo ? '<img class="detail-card-image" src="' + mem.photo + '" alt="">' : '') + '<div class="detail-card-body"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><div class="memory-card-date">' + dateDisplay + '</div><button style="background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;padding:4px 8px;" onclick="event.stopPropagation();this.closest(\'.detail-overlay\').remove();openAddModal(\'' + mem.id + '\')">✏️</button></div><div class="memory-card-tags">' + tagsHtml + '</div><div class="memory-card-title" style="font-size:20px;margin-bottom:12px;">' + escapeHtml(mem.title) + '</div>' + (mem.text ? '<div class="memory-card-text">' + escapeHtml(mem.text) + '</div>' : '') + '</div></div>';
+  overlay.innerHTML = '<div class="detail-card">' + (mem.photo ? '<img class="detail-card-image" src="' + mem.photo + '" alt="">' : '') + '<div class="detail-card-body"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><div class="memory-card-date">' + dateDisplay + '</div><button style="background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;padding:4px 8px;" onclick="event.stopPropagation();this.closest(\'.detail-overlay\').remove();openAddModal(\'' + mem.id + '\')">鉁忥笍</button></div><div class="memory-card-tags">' + tagsHtml + '</div><div class="memory-card-title" style="font-size:20px;margin-bottom:12px;">' + escapeHtml(mem.title) + '</div>' + (mem.text ? '<div class="memory-card-text">' + escapeHtml(mem.text) + '</div>' : '') + '</div></div>';
   document.body.appendChild(overlay);
 }
 
-// ===================== 星星背景 =====================
+// ===================== 鏄熸槦鑳屾櫙 =====================
 function initStars() {
   const c = document.getElementById('stars'); let html = '';
   for (let i = 0; i < 80; i++) {
@@ -927,19 +926,19 @@ function initStars() {
   c.innerHTML = html;
 }
 
-// ===================== 星球翻转 =====================
+// ===================== 鏄熺悆缈昏浆 =====================
 function togglePlanetFlip() { document.getElementById('planetFlip').classList.toggle('flipped'); }
 
-// ===================== 头像 =====================
+// ===================== 澶村儚 =====================
 function loadAvatar() { try { return localStorage.getItem(AVATAR_KEY); } catch(e) { return null; } }
 function saveAvatar(dataUrl) { localStorage.setItem(AVATAR_KEY, dataUrl); applyAvatar(dataUrl); }
 function applyAvatar(dataUrl) {
   const back = document.getElementById('planetBack');
-  back.innerHTML = dataUrl ? '<img src="' + dataUrl + '" alt="头像">' : '<span class="no-avatar">📷</span>';
+  back.innerHTML = dataUrl ? '<img src="' + dataUrl + '" alt="澶村儚">' : '<span class="no-avatar">馃摲</span>';
 }
 function updateAvatarPreview() {
   const upload = document.getElementById('avatarUpload'); const dataUrl = loadAvatar();
-  upload.innerHTML = dataUrl ? '<img src="' + dataUrl + '" alt="预览" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' : '<span class="photo-upload-icon">📷</span><span class="photo-upload-text" style="font-size:11px;">上传头像</span>';
+  upload.innerHTML = dataUrl ? '<img src="' + dataUrl + '" alt="棰勮" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' : '<span class="photo-upload-icon">馃摲</span><span class="photo-upload-text" style="font-size:11px;">涓婁紶澶村儚</span>';
 }
 function handleAvatarSelect(event) {
   const file = event.target.files[0]; if (!file) return;
@@ -959,13 +958,13 @@ function handleAvatarSelect(event) {
   reader.readAsDataURL(file);
 }
 
-// ===================== 音乐 =====================
+// ===================== 闊充箰 =====================
 let musicDataUrls = []; let musicIndex = -1; let audioEl = null;
 function loadMusics() { try { musicDataUrls = JSON.parse(localStorage.getItem(MUSIC_KEY)) || []; } catch(e) { musicDataUrls = []; } updateMusicLabel(); }
 function saveMusics() { localStorage.setItem(MUSIC_KEY, JSON.stringify(musicDataUrls)); }
 function updateMusicLabel() {
   const el = document.getElementById('musicLabel'); if (!el) return;
-  el.textContent = musicDataUrls.length > 0 ? '✅ 已上传 ' + musicDataUrls.length + ' 首 · 点击替换' : '点击上传音乐文件（支持 mp3）';
+  el.textContent = musicDataUrls.length > 0 ? '鉁?宸蹭笂浼?' + musicDataUrls.length + ' 棣?路 鐐瑰嚮鏇挎崲' : '鐐瑰嚮涓婁紶闊充箰鏂囦欢锛堟敮鎸?mp3锛?;
 }
 function handleMusicSelect(event) {
   const file = event.target.files[0]; if (!file) return;
@@ -981,18 +980,18 @@ function toggleMusic() {
   audioEl.play().catch(e => {});
 }
 
-// ===================== 日历导出 =====================
+// ===================== 鏃ュ巻瀵煎嚭 =====================
 function syncToCalendar() {
-  if (memories.length === 0) { alert('还没有纪念日'); return; }
-  if (!confirm('📅 请先删除旧日历再导入新的：\niPhone日历App → 底部「日历」→ 找到「我们的星球」→ ℹ️ → 删除日历\n\n点「确定」继续')) return;
+  if (memories.length === 0) { alert('杩樻病鏈夌邯蹇垫棩'); return; }
+  if (!confirm('馃搮 璇峰厛鍒犻櫎鏃ф棩鍘嗗啀瀵煎叆鏂扮殑锛歕niPhone鏃ュ巻App 鈫?搴曢儴銆屾棩鍘嗐€嶁啋 鎵惧埌銆屾垜浠殑鏄熺悆銆嶁啋 鈩癸笍 鈫?鍒犻櫎鏃ュ巻\n\n鐐广€岀‘瀹氥€嶇户缁?)) return;
   const currentYear = new Date().getFullYear();
-  const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//OurPlanet//CN','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:我们的星球','X-WR-CALDESC:情侣纪念日','X-APPLE-CALENDAR-COLOR:#FF6B9D'];
+  const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//OurPlanet//CN','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:鎴戜滑鐨勬槦鐞?,'X-WR-CALDESC:鎯呬荆绾康鏃?,'X-APPLE-CALENDAR-COLOR:#FF6B9D'];
   for (const mem of memories) {
-    const title = mem.title || '纪念日';
-    const tags = (mem.tags || []).join('、');
-    let desc = (mem.text || '') + (tags ? '\\n\\n标签: ' + tags : '');
+    const title = mem.title || '绾康鏃?;
+    const tags = (mem.tags || []).join('銆?);
+    let desc = (mem.text || '') + (tags ? '\\n\\n鏍囩: ' + tags : '');
     if (mem.calType === 'lunar') {
-      desc += '\\n阴历: ' + (mem.lunarDisplay || '');
+      desc += '\\n闃村巻: ' + (mem.lunarDisplay || '');
       for (let y = currentYear; y < currentYear + 20; y++) {
         const solar = lunarToSolar(y, mem.lunarMonth, mem.lunarDay, mem.isLeap);
         const dt = String(solar.year).padStart(4,'0') + String(solar.month).padStart(2,'0') + String(solar.day).padStart(2,'0');
@@ -1010,11 +1009,11 @@ function syncToCalendar() {
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 
-// ===================== 通知 =====================
+// ===================== 閫氱煡 =====================
 async function requestNotification() {
-  if (!('Notification' in window)) { alert('你的浏览器不支持通知。\n\n解决方法：Safari 打开 → 分享 → 添加到主屏幕 → 从桌面打开再试。'); return; }
-  if (Notification.permission === 'granted') { alert('✅ 已开启！'); updateNotifyBtn(); scheduleNotifications(); return; }
-  if (Notification.permission === 'denied') { alert('权限已被拒绝。'); return; }
+  if (!('Notification' in window)) { alert('浣犵殑娴忚鍣ㄤ笉鏀寔閫氱煡銆俓n\n瑙ｅ喅鏂规硶锛歋afari 鎵撳紑 鈫?鍒嗕韩 鈫?娣诲姞鍒颁富灞忓箷 鈫?浠庢闈㈡墦寮€鍐嶈瘯銆?); return; }
+  if (Notification.permission === 'granted') { alert('鉁?宸插紑鍚紒'); updateNotifyBtn(); scheduleNotifications(); return; }
+  if (Notification.permission === 'denied') { alert('鏉冮檺宸茶鎷掔粷銆?); return; }
   try {
     const r = await Notification.requestPermission();
     if (r === 'granted') { updateNotifyBtn(); scheduleNotifications(); }
@@ -1022,29 +1021,29 @@ async function requestNotification() {
 }
 function updateNotifyBtn() {
   const btn = document.getElementById('notifyBtn'); if (!btn) return;
-  if (Notification.permission === 'granted') { btn.classList.add('enabled'); btn.title = '已开启'; }
-  else { btn.classList.remove('enabled'); btn.title = '开启消息提醒'; }
+  if (Notification.permission === 'granted') { btn.classList.add('enabled'); btn.title = '宸插紑鍚?; }
+  else { btn.classList.remove('enabled'); btn.title = '寮€鍚秷鎭彁閱?; }
 }
 function scheduleNotifications() {
   if (Notification.permission !== 'granted') return;
   const today = new Date(); today.setHours(0,0,0,0);
   for (const mem of memories) {
     const a = getNextAnniversary(mem);
-    if (a.days === 0) new Notification('🎉 ' + mem.title, { body: '今天是纪念日！', tag: mem.id });
-    else if (a.days === 1) new Notification('⏰ 明天就是 ' + mem.title, { body: '还剩1天', tag: 'tmo_' + mem.id });
+    if (a.days === 0) new Notification('馃帀 ' + mem.title, { body: '浠婂ぉ鏄邯蹇垫棩锛?, tag: mem.id });
+    else if (a.days === 1) new Notification('鈴?鏄庡ぉ灏辨槸 ' + mem.title, { body: '杩樺墿1澶?, tag: 'tmo_' + mem.id });
   }
 }
 function setupNotificationTimer() { if (Notification.permission === 'granted') { scheduleNotifications(); setInterval(scheduleNotifications, 3600000); } }
 
-// ===================== 云同步设置弹窗 =====================
+// ===================== 浜戝悓姝ヨ缃脊绐?=====================
 function openSyncModal() {
   const tokenGroup = document.getElementById('tokenGroup');
   const syncHelp = document.getElementById('syncHelp');
   updateAvatarPreview(); updateMusicLabel();
   if (syncConfig.enabled && syncConfig.password) {
     tokenGroup.style.display = 'none'; syncHelp.style.display = 'none';
-    const t = syncConfig.lastSync ? new Date(syncConfig.lastSync).toLocaleString('zh-CN') : '未知';
-    document.getElementById('syncState').textContent = '✅ 已同步 · 上次: ' + t;
+    const t = syncConfig.lastSync ? new Date(syncConfig.lastSync).toLocaleString('zh-CN') : '鏈煡';
+    document.getElementById('syncState').textContent = '鉁?宸插悓姝?路 涓婃: ' + t;
     document.getElementById('syncState').style.color = '#57d9a3';
     document.getElementById('btnDisableSync').style.display = 'block';
   } else {
@@ -1062,35 +1061,35 @@ async function saveSyncSettings() {
   const stateEl = document.getElementById('syncState');
   if (!syncConfig.password) {
     const t = document.getElementById('syncToken').value.trim();
-    if (!t) { stateEl.textContent = '请输入 Token'; return; }
+    if (!t) { stateEl.textContent = '璇疯緭鍏?Token'; return; }
     syncConfig.password = t;
   }
   syncConfig.enabled = true;
-  stateEl.textContent = '⏳ 同步中...'; stateEl.style.color = 'var(--text2)';
+  stateEl.textContent = '鈴?鍚屾涓?..'; stateEl.style.color = 'var(--text2)';
   try {
     if (await syncMemories()) {
       syncConfig.lastSync = Date.now(); saveSyncConfig();
-      stateEl.textContent = '✅ 成功！'; stateEl.style.color = '#57d9a3';
+      stateEl.textContent = '鉁?鎴愬姛锛?; stateEl.style.color = '#57d9a3';
       document.getElementById('btnDisableSync').style.display = 'block';
       document.getElementById('tokenGroup').style.display = 'none';
       renderAll(); updateSyncStatusUI(); setTimeout(closeSyncModal, 1500);
-    } else { stateEl.textContent = '❌ 失败'; stateEl.style.color = '#ff6b6b'; }
-  } catch(e) { stateEl.textContent = '❌ ' + e.message; stateEl.style.color = '#ff6b6b'; }
+    } else { stateEl.textContent = '鉂?澶辫触'; stateEl.style.color = '#ff6b6b'; }
+  } catch(e) { stateEl.textContent = '鉂?' + e.message; stateEl.style.color = '#ff6b6b'; }
 }
 
 function disableSync() {
-  if (!confirm('确定断开同步？')) return;
+  if (!confirm('纭畾鏂紑鍚屾锛?)) return;
   syncConfig.enabled = false; syncConfig.password = ''; syncConfig.lastSync = 0; saveSyncConfig();
   closeSyncModal(); updateSyncStatusUI();
 }
 
 function updateSyncStatusUI() {
   const el = document.getElementById('syncStatus'); if (!el) return;
-  if (syncConfig.enabled) { el.textContent = '☁️ 已同步'; el.className = 'sync-status synced'; }
-  else { el.textContent = '⚙️ 点击设置云同步'; el.className = 'sync-status'; }
+  if (syncConfig.enabled) { el.textContent = '鈽侊笍 宸插悓姝?; el.className = 'sync-status synced'; }
+  else { el.textContent = '鈿欙笍 鐐瑰嚮璁剧疆浜戝悓姝?; el.className = 'sync-status'; }
 }
 
-// ===================== 初始化 =====================
+// ===================== 鍒濆鍖?=====================
 function init() {
   initStars(); loadSyncConfig(); loadMusics(); updateMusicLabel(); applyAvatar(loadAvatar());
   loadMemories().then(() => { initTagBar(); renderAll(); updateSyncStatusUI(); updateNotifyBtn(); setupNotificationTimer(); });
