@@ -140,9 +140,15 @@ function saveMemory() {
     text: text
   });
   
+  console.log('Saving memory:', title, 'Total memories:', memories.length);
+  console.log('ghToken exists:', !!ghToken);
+  
   localStorage.setItem('memories', JSON.stringify(memories));
   if (ghToken) {
+    console.log('Calling ghWrite...');
     ghWrite();
+  } else {
+    console.warn('No ghToken, skipping GitHub sync');
   }
   hideAddModal();
   render();
