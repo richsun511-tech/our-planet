@@ -1080,7 +1080,7 @@ function lunarToSolar(lunarYear, lunarMonth, lunarDay, isLeap) {
 }
 
 // ===================== 数据管理 =====================
-const STORAGE_KEY = 'our_planet_memories_v2';
+const STORAGE_KEY = 'our_planet_memories_v3';
 const AVATAR_KEY = 'our_planet_avatar';
 const SYNC_CONFIG_KEY = 'our_planet_sync_config';
 
@@ -1106,7 +1106,7 @@ function saveSyncConfig() {
 
 // GitHub 同步引擎
 const GH_REPO = 'richsun511-tech/our-planet';
-const GH_FILE = 'data-v2.json';
+const GH_FILE = 'data-v3.json';
 const GH_API = 'https://api.github.com/repos/' + GH_REPO + '/contents/' + GH_FILE;
 let ghSha = null;
 
