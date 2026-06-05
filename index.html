@@ -1223,7 +1223,7 @@ async function loadMemories() {
   }
 }
 
-async function saveMemories() { memories = sanitizeData(memories);
+async function saveMemories() { memories = sanitizeData(memories); memories = sanitizeData(memories);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(memories));
   if (syncConfig.enabled) {
     pushToRemote().catch(e => console.warn('推送到云端失败:', e.message));
