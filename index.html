@@ -12,11 +12,11 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 .header{text-align:center;padding:20px 0}
 .header h1{font-size:24px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .header p{font-size:13px;color:var(--text2);margin-top:4px}
+.settings-btn{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 12px;color:var(--text2);font-size:14px;cursor:pointer}
 .countdown{background:rgba(255,255,255,0.05);border-radius:16px;padding:20px;text-align:center;margin-bottom:20px}
 .countdown-days{font-size:48px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .countdown-label{font-size:12px;color:var(--text2);margin-top:4px}
 .countdown-title{font-size:16px;font-weight:600;margin-top:8px}
-.countdown-since{font-size:18px;font-weight:700;color:var(--accent2);margin-top:8px}
 .add-btn{width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:20px}
 .add-btn:active{transform:scale(0.98)}
 .memory-list{display:flex;flex-direction:column;gap:16px}
@@ -41,6 +41,7 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 </head>
 <body>
 <div class="app">
+  <button class="settings-btn" onclick="showSettings()">⚙️</button>
   <div class="header">
     <h1>我们的星球</h1>
     <p>每一颗果实，都是我们的回忆</p>
@@ -51,7 +52,6 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
     <div class="countdown-days" id="countdownDays">-</div>
     <div class="countdown-label">天</div>
     <div class="countdown-title" id="countdownTitle">添加第一个纪念日</div>
-    <div class="countdown-since" id="countdownSince"></div>
   </div>
   
   <button class="add-btn" onclick="showAddModal()">+ 添加纪念日</button>
@@ -81,8 +81,23 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
   </div>
 </div>
 
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h2>同步设置</h2>
+    <div class="form-group">
+      <label>GitHub Token</label>
+      <input type="password" id="inputToken" placeholder="输入 GitHub Token">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-cancel" onclick="hideSettings()">取消</button>
+      <button class="btn btn-save" onclick="saveToken()">保存</button>
+    </div>
+  </div>
+</div>
+
 <script>
 var memories = [];
+var ghToken = localStorage.getItem('gh_token') || '';
 
 function showAddModal() {
   document.getElementById('addModal').classList.add('active');
@@ -91,6 +106,24 @@ function showAddModal() {
 
 function hideAddModal() {
   document.getElementById('addModal').classList.remove('active');
+}
+
+function showSettings() {
+  document.getElementById('settingsModal').classList.add('active');
+  document.getElementById('inputToken').value = ghToken;
+}
+
+function hideSettings() {
+  document.getElementById('settingsModal').classList.remove('active');
+}
+
+function saveToken() {
+  ghToken = document.getElementById('inputToken').value.trim();
+  localStorage.setItem('gh_token', ghToken);
+  hideSettings();
+  if (ghToken) {
+    ghRead();
+  }
 }
 
 function saveMemory() {
@@ -107,7 +140,10 @@ function saveMemory() {
     text: text
   });
   
-  localStorage.setItem('planet_memories', JSON.stringify(memories));
+  localStorage.setItem('memories', JSON.stringify(memories));
+  if (ghToken) {
+    ghWrite();
+  }
   hideAddModal();
   render();
 }
@@ -115,12 +151,72 @@ function saveMemory() {
 function deleteMemory(id) {
   if (!confirm('确定删除吗？')) return;
   memories = memories.filter(function(m) { return m.id !== id; });
-  localStorage.setItem('planet_memories', JSON.stringify(memories));
+  localStorage.setItem('memories', JSON.stringify(memories));
+  if (ghToken) {
+    ghWrite();
+  }
   render();
 }
 
+function ghRead() {
+  fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json', {
+    headers: { 'Authorization': 'token ' + ghToken }
+  })
+  .then(function(r) {
+    if (!r.ok) return null;
+    return r.json();
+  })
+  .then(function(data) {
+    if (data && data.content) {
+      var b64 = data.content.replace(/\s/g, '');
+      var binary = atob(b64);
+      var bytes = [];
+      for (var i = 0; i < binary.length; i++) {
+        bytes.push(binary.charCodeAt(i));
+      }
+      var decoder = new TextDecoder('utf-8');
+      var text = decoder.decode(new Uint8Array(bytes));
+      memories = JSON.parse(text);
+      localStorage.setItem('memories', JSON.stringify(memories));
+      render();
+    }
+  })
+  .catch(function(e) {
+    console.warn('Read error:', e);
+  });
+}
+
+function ghWrite() {
+  var jsonStr = JSON.stringify(memories);
+  var blob = new Blob([jsonStr], { type: 'text/plain' });
+  var reader = new FileReader();
+  reader.onload = function() {
+    var b64 = reader.result.split(',')[1];
+    fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json', {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'token ' + ghToken,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: 'Sync',
+        content: b64,
+        branch: 'main'
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function() {
+      console.log('Write success');
+    })
+    .catch(function(e) {
+      console.warn('Write error:', e);
+    });
+  };
+  reader.readAsDataURL(blob);
+}
+
 function loadMemories() {
-  var data = localStorage.getItem('planet_memories');
+  var data = localStorage.getItem('memories');
   memories = data ? JSON.parse(data) : [];
 }
 
@@ -131,7 +227,6 @@ function render() {
     list.innerHTML = '<div style="text-align:center;color:var(--text2);padding:40px">还没有纪念日<br>点击上方按钮添加第一个</div>';
     document.getElementById('countdownDays').textContent = '-';
     document.getElementById('countdownTitle').textContent = '添加第一个纪念日';
-    document.getElementById('countdownSince').textContent = '';
     return;
   }
   
@@ -190,6 +285,9 @@ function escapeHtml(str) {
 
 loadMemories();
 render();
+if (ghToken) {
+  ghRead();
+}
 </script>
 </body>
 </html>
