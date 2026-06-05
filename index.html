@@ -187,22 +187,29 @@ function ghRead() {
 }
 
 function ghWrite() {
+  console.log('ghWrite called, memories:', memories.length);
+  
   var jsonStr = JSON.stringify(memories);
   var blob = new Blob([jsonStr], { type: 'text/plain' });
   var reader = new FileReader();
   reader.onload = function() {
     var b64 = reader.result.split(',')[1];
+    console.log('Base64 prepared, length:', b64.length);
     
     // 先获取最新的 SHA
     fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json', {
       headers: { 'Authorization': 'token ' + ghToken }
     })
     .then(function(r) { 
-      if (!r.ok) throw new Error('获取SHA失败: ' + r.status);
+      if (!r.ok) {
+        console.error('Failed to get SHA:', r.status);
+        throw new Error('获取SHA失败: ' + r.status);
+      }
       return r.json(); 
     })
     .then(function(data) {
       var sha = data.sha;
+      console.log('Got SHA:', sha);
       return fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json', {
         method: 'PUT',
         headers: {
@@ -218,7 +225,10 @@ function ghWrite() {
       });
     })
     .then(function(r) { 
-      if (!r.ok) throw new Error('写入失败: ' + r.status);
+      if (!r.ok) {
+        console.error('Failed to write:', r.status);
+        throw new Error('写入失败: ' + r.status);
+      }
       return r.json(); 
     })
     .then(function() {
