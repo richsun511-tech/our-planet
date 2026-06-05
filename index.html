@@ -1177,7 +1177,49 @@ async function syncMemories() {
 }
 
 // 仅推送
-async function pushToRemote() {
+async 
+function ghRead() {
+  return fetch(GHA, {
+    headers: { Authorization: 'token ' + syncConfig.password }
+  }).then(function(resp) {
+    if (resp.status === 404) return null;
+    if (!resp.ok) throw new Error('GitHub read: ' + resp.status);
+    return resp.json();
+  }).then(function(json) {
+    if (!json) return null;
+    ghSha = json.sha;
+    // Decode: base64 鈫?UTF-8 byte string 鈫?proper string
+    var decoded = decodeURIComponent(escape(atob(json.content.replace(/\s/g, ''))));
+    return JSON.parse(decoded);
+  }).catch(function() { return null; });
+}
+
+function ghWrite(data) {
+  var cleanData = sanitizeData(data);
+  var jsonStr = JSON.stringify(cleanData);
+  // Encode: string 鈫?UTF-8 byte string 鈫?base64
+  var encoded = btoa(unescape(encodeURIComponent(jsonStr)));
+  var body = {
+    message: 'Sync data',
+    content: encoded,
+    branch: 'main'
+  };
+  if (ghSha) body.sha = ghSha;
+  return fetch(GHA, {
+    method: 'PUT',
+    headers: {
+      Authorization: 'token ' + syncConfig.password,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  }).then(function(resp) {
+    if (!resp.ok) throw new Error('GitHub write: ' + resp.status);
+    return resp.json();
+  }).then(function(json) {
+    ghSha = json.content.sha;
+  });
+}
+function pushToRemote() {
   if (!syncConfig.enabled) return;
   try {
     await githubWrite(memories);
