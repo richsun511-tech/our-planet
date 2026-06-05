@@ -192,24 +192,35 @@ function ghWrite() {
   var reader = new FileReader();
   reader.onload = function() {
     var b64 = reader.result.split(',')[1];
+    
+    // 先获取最新的 SHA
     fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json', {
-      method: 'PUT',
-      headers: {
-        'Authorization': 'token ' + ghToken,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        message: 'Sync',
-        content: b64,
-        branch: 'main'
-      })
+      headers: { 'Authorization': 'token ' + ghToken }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var sha = data.sha;
+      return fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json', {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'token ' + ghToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: 'Sync',
+          content: b64,
+          branch: 'main',
+          sha: sha
+        })
+      });
     })
     .then(function(r) { return r.json(); })
     .then(function() {
       console.log('Write success');
     })
     .catch(function(e) {
-      console.warn('Write error:', e);
+      console.error('Write error:', e);
+      alert('同步失败: ' + e.message);
     });
   };
   reader.readAsDataURL(blob);
