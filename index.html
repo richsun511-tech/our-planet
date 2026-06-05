@@ -1235,7 +1235,22 @@ function sanitizeData(arr) {
   if (!arr || !arr.length) return [];
   return arr.filter(function(m) {
     if (!m || !m.title || m.title.length < 1) return false;
+    // Check for replacement character
     if (m.title.indexOf('\uFFFD') >= 0) return false;
+    // Check for double-encoding: 脙脗脙脗 pattern (bytes C3 83 C2 83 etc.)
+    if (m.title.indexOf('\u00C3\u0083') >= 0) return false;
+    if (m.title.indexOf('\u00C3\u00A6') >= 0) return false;
+    if (m.title.indexOf('\u00C2\u00B5') >= 0) return false;
+    // Check for high ratio of C3/C2 bytes (indicates double-encoding)
+    var badCount = 0;
+    for (var i = 0; i < m.title.length; i++) {
+      var c = m.title.charCodeAt(i);
+      if (c === 0xC3 || c === 0xC2) badCount++;
+    }
+    if (badCount > m.title.length * 0.3) return false;
+    // Check for all question marks or mostly question marks
+    var qCount = (m.title.match(/\?/g) || []).length;
+    if (qCount > m.title.length * 0.5) return false;
     return true;
   });
 }
