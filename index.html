@@ -1240,35 +1240,17 @@ function sanitizeData(arr) {
   });
 }
 
-// GitHub sync functions - careful UTF-8 encoding
-function ghRead() {
-  return fetch(GHA, { headers: { Authorization: 'token ' + syncConfig.password } })
-    .then(function(resp) {
-      if (resp.status === 404) return null;
-      if (!resp.ok) throw new Error('ghRead: ' + resp.status);
-      return resp.json();
-    })
-    .then(function(json) {
-      if (!json || !json.content) return null;
-      ghSha = json.sha;
-      // GitHub API stores content as base64 of UTF-8 bytes
-      var raw = atob(json.content.replace(/\s/g, ''));
-      // Convert byte string to proper Unicode
-      var str = decodeURIComponent(escape(raw));
-      return JSON.parse(str);
-    })
-    .catch(function(e) {
-      console.warn('ghRead error:', e);
-      return null;
-    });
-}
-
 function ghWrite(data) {
   var str = JSON.stringify(data);
-  // Convert Unicode to UTF-8 byte string
-  var byteStr = unescape(encodeURIComponent(str));
-  // Base64 encode
-  var b64 = btoa(byteStr);
+  // Use TextEncoder for proper UTF-8 conversion
+  var encoder = new TextEncoder();
+  var utf8Bytes = encoder.encode(str);
+  // Convert to base64 manually
+  var binary = '';
+  for (var i = 0; i < utf8Bytes.length; i++) {
+    binary += String.fromCharCode(utf8Bytes[i]);
+  }
+  var b64 = btoa(binary);
   
   var body = {
     message: 'Sync',
@@ -1295,8 +1277,31 @@ function ghWrite(data) {
   .catch(function(e) {
     console.warn('ghWrite error:', e);
   });
-}
-function generateId() {
+}function ghRead() {
+  return fetch(GHA, { headers: { Authorization: 'token ' + syncConfig.password } })
+    .then(function(resp) {
+      if (resp.status === 404) return null;
+      if (!resp.ok) throw new Error('ghRead: ' + resp.status);
+      return resp.json();
+    })
+    .then(function(json) {
+      if (!json || !json.content) return null;
+      ghSha = json.sha;
+      var raw = atob(json.content.replace(/\s/g, ''));
+      // Convert binary string back to UTF-8 bytes
+      var bytes = new Uint8Array(raw.length);
+      for (var i = 0; i < raw.length; i++) {
+        bytes[i] = raw.charCodeAt(i);
+      }
+      var decoder = new TextDecoder('utf-8');
+      var str = decoder.decode(bytes);
+      return JSON.parse(str);
+    })
+    .catch(function(e) {
+      console.warn('ghRead error:', e);
+      return null;
+    });
+}function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
 }
 
