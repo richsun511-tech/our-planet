@@ -190,7 +190,7 @@ function ghWrite() {
   console.log('ghWrite called, memories:', memories.length);
   
   var jsonStr = JSON.stringify(memories);
-  console.log('JSON string:', jsonStr.substring(0, 100));
+  console.log('JSON string length:', jsonStr.length);
   
   var blob = new Blob([jsonStr], { type: 'text/plain' });
   var reader = new FileReader();
@@ -204,8 +204,8 @@ function ghWrite() {
     })
     .then(function(r) { 
       if (!r.ok) {
-        console.error('Failed to get SHA:', r.status);
-        alert('获取SHA失败: ' + r.status);
+        console.error('Failed to get SHA:', r.status, r.statusText);
+        alert('获取SHA失败: ' + r.status + ' ' + r.statusText);
         throw new Error('获取SHA失败: ' + r.status);
       }
       return r.json(); 
@@ -213,35 +213,43 @@ function ghWrite() {
     .then(function(data) {
       var sha = data.sha;
       console.log('Got SHA:', sha);
+      
+      var payload = JSON.stringify({
+        message: 'Sync',
+        content: b64,
+        branch: 'main',
+        sha: sha
+      });
+      console.log('Payload length:', payload.length);
+      
       return fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json', {
         method: 'PUT',
         headers: {
           'Authorization': 'token ' + ghToken,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          message: 'Sync',
-          content: b64,
-          branch: 'main',
-          sha: sha
-        })
+        body: payload
       });
     })
     .then(function(r) { 
+      console.log('Write response status:', r.status, r.statusText);
       if (!r.ok) {
-        console.error('Failed to write:', r.status);
-        alert('写入失败: ' + r.status);
-        throw new Error('写入失败: ' + r.status);
+        return r.text().then(function(text) {
+          console.error('Write failed:', text);
+          alert('写入失败: ' + r.status + ' - ' + text);
+          throw new Error('写入失败: ' + r.status);
+        });
       }
       return r.json(); 
     })
     .then(function() {
       console.log('Write success');
-      alert('同步成功!');
     })
     .catch(function(e) {
       console.error('Write error:', e);
-      alert('同步失败: ' + e.message);
+      if (!e.message.includes('写入失败')) {
+        alert('同步失败: ' + e.message);
+      }
     });
   };
   reader.readAsDataURL(blob);
