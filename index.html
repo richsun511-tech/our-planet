@@ -1236,7 +1236,11 @@ function sanitizeData(arr) {
   return arr.filter(function(m) {
     if (!m || !m.title || m.title.length < 1) return false;
     // Check for replacement character
-    if (m.title.indexOf('\uFFFD') >= 0) return false;
+        if (m.title.indexOf('\uFFFD') >= 0) return false;
+    if (m.title.indexOf('\u00C3') >= 0) return false;
+    if (m.title.indexOf('\u00C2') >= 0) return false;
+    if (/^\?+$/.test(m.title)) return false;
+    if (/^[\u0080-\u00FF]+$/.test(m.title)) return false;
     // Check for double-encoding: 脙脗脙脗 pattern (bytes C3 83 C2 83 etc.)
         if (m.title.indexOf('\u00C3\u0083') >= 0) return false;
     if (m.title.indexOf('\u00C3\u00A6') >= 0) return false;
