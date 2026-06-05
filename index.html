@@ -147,12 +147,7 @@ function saveMemory() {
   
   if (ghToken) {
     console.log('Calling ghWrite...');
-    ghWrite().then(function() {
-      console.log('ghWrite completed successfully');
-    }).catch(function(e) {
-      console.error('ghWrite failed:', e);
-      alert('同步失败: ' + e.message);
-    });
+    ghWrite();
   } else {
     console.warn('No ghToken, skipping GitHub sync');
   }
@@ -217,9 +212,10 @@ function ghWrite() {
     })
     .then(function(r) { 
       if (!r.ok) {
-        console.error('Failed to get SHA:', r.status, r.statusText);
-        alert('获取SHA失败: ' + r.status + ' ' + r.statusText);
-        throw new Error('获取SHA失败: ' + r.status);
+        var errMsg = '获取SHA失败: ' + r.status + ' ' + r.statusText;
+        console.error(errMsg);
+        alert(errMsg);
+        throw new Error(errMsg);
       }
       return r.json(); 
     })
@@ -247,20 +243,22 @@ function ghWrite() {
     .then(function(r) { 
       console.log('Write response status:', r.status, r.statusText);
       if (!r.ok) {
-        return r.text().then(function(text) {
-          console.error('Write failed:', text);
-          alert('写入失败: ' + r.status + ' - ' + text);
-          throw new Error('写入失败: ' + r.status);
+        return r.text().then(function(errText) {
+          var errMsg = '写入失败: ' + r.status + ' - ' + errText;
+          console.error(errMsg);
+          alert(errMsg);
+          throw new Error(errMsg);
         });
       }
       return r.json(); 
     })
     .then(function() {
       console.log('Write success');
+      alert('同步成功! 数据已保存到 GitHub');
     })
     .catch(function(e) {
       console.error('Write error:', e);
-      if (!e.message.includes('写入失败')) {
+      if (!e.message.includes('失败')) {
         alert('同步失败: ' + e.message);
       }
     });
