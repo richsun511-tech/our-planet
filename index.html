@@ -1239,6 +1239,63 @@ function sanitizeData(arr) {
     return true;
   });
 }
+
+// GitHub sync functions - careful UTF-8 encoding
+function ghRead() {
+  return fetch(GHA, { headers: { Authorization: 'token ' + syncConfig.password } })
+    .then(function(resp) {
+      if (resp.status === 404) return null;
+      if (!resp.ok) throw new Error('ghRead: ' + resp.status);
+      return resp.json();
+    })
+    .then(function(json) {
+      if (!json || !json.content) return null;
+      ghSha = json.sha;
+      // GitHub API stores content as base64 of UTF-8 bytes
+      var raw = atob(json.content.replace(/\s/g, ''));
+      // Convert byte string to proper Unicode
+      var str = decodeURIComponent(escape(raw));
+      return JSON.parse(str);
+    })
+    .catch(function(e) {
+      console.warn('ghRead error:', e);
+      return null;
+    });
+}
+
+function ghWrite(data) {
+  var str = JSON.stringify(data);
+  // Convert Unicode to UTF-8 byte string
+  var byteStr = unescape(encodeURIComponent(str));
+  // Base64 encode
+  var b64 = btoa(byteStr);
+  
+  var body = {
+    message: 'Sync',
+    content: b64,
+    branch: 'main'
+  };
+  if (ghSha) body.sha = ghSha;
+  
+  return fetch(GHA, {
+    method: 'PUT',
+    headers: {
+      Authorization: 'token ' + syncConfig.password,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  })
+  .then(function(resp) {
+    if (!resp.ok) throw new Error('ghWrite: ' + resp.status);
+    return resp.json();
+  })
+  .then(function(json) {
+    ghSha = json.content.sha;
+  })
+  .catch(function(e) {
+    console.warn('ghWrite error:', e);
+  });
+}
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
 }
