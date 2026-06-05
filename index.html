@@ -144,12 +144,19 @@ function saveMemory() {
   console.log('ghToken exists:', !!ghToken);
   
   localStorage.setItem('memories', JSON.stringify(memories));
+  
   if (ghToken) {
     console.log('Calling ghWrite...');
-    ghWrite();
+    ghWrite().then(function() {
+      console.log('ghWrite completed successfully');
+    }).catch(function(e) {
+      console.error('ghWrite failed:', e);
+      alert('同步失败: ' + e.message);
+    });
   } else {
     console.warn('No ghToken, skipping GitHub sync');
   }
+  
   hideAddModal();
   render();
 }
