@@ -190,6 +190,8 @@ function ghWrite() {
   console.log('ghWrite called, memories:', memories.length);
   
   var jsonStr = JSON.stringify(memories);
+  console.log('JSON string:', jsonStr.substring(0, 100));
+  
   var blob = new Blob([jsonStr], { type: 'text/plain' });
   var reader = new FileReader();
   reader.onload = function() {
@@ -203,6 +205,7 @@ function ghWrite() {
     .then(function(r) { 
       if (!r.ok) {
         console.error('Failed to get SHA:', r.status);
+        alert('获取SHA失败: ' + r.status);
         throw new Error('获取SHA失败: ' + r.status);
       }
       return r.json(); 
@@ -227,12 +230,14 @@ function ghWrite() {
     .then(function(r) { 
       if (!r.ok) {
         console.error('Failed to write:', r.status);
+        alert('写入失败: ' + r.status);
         throw new Error('写入失败: ' + r.status);
       }
       return r.json(); 
     })
     .then(function() {
       console.log('Write success');
+      alert('同步成功!');
     })
     .catch(function(e) {
       console.error('Write error:', e);
