@@ -1235,9 +1235,24 @@ function sanitizeData(arr) {
   if (!arr || !arr.length) return [];
   return arr.filter(function(m) {
     if (!m || !m.title || m.title.length < 1) return false;
+    // Only filter actual double-encoding (4-byte sequences per original char)
+    // Pattern: C3 83 C2 XX or C3 83 C3 XX (re-encoded UTF-8)
+    var doubleEncoded = false;
+    for (var i = 0; i < m.title.length - 3; i++) {
+      var c1 = m.title.charCodeAt(i);
+      var c2 = m.title.charCodeAt(i + 1);
+      var c3 = m.title.charCodeAt(i + 2);
+      var c4 = m.title.charCodeAt(i + 3);
+      // C3 83 C2 XX or C3 83 C3 XX pattern
+      if (c1 === 0xC3 && c2 === 0x83 && (c3 === 0xC2 || c3 === 0xC3)) {
+        doubleEncoded = true;
+        break;
+      }
+    }
+    if (doubleEncoded) return false;
+    // Filter replacement characters
     if (m.title.indexOf('\uFFFD') >= 0) return false;
-    if (m.title.indexOf('\u00C3') >= 0) return false;
-    if (m.title.indexOf('\u00C2') >= 0) return false;
+    // Filter all-question-mark titles
     if (/^\?+$/.test(m.title)) return false;
     return true;
   });
