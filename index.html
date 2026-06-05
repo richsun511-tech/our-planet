@@ -1240,44 +1240,48 @@ function sanitizeData(arr) {
   });
 }
 
+
 function ghWrite(data) {
-  var str = JSON.stringify(data);
-  // Use TextEncoder for proper UTF-8 conversion
-  var encoder = new TextEncoder();
-  var utf8Bytes = encoder.encode(str);
-  // Convert to base64 manually
-  var binary = '';
-  for (var i = 0; i < utf8Bytes.length; i++) {
-    binary += String.fromCharCode(utf8Bytes[i]);
+  var jsonStr = JSON.stringify(data);
+  // Manual UTF-8 encoding: string to byte array
+  var bytes = [];
+  for (var i = 0; i < jsonStr.length; i++) {
+    var code = jsonStr.charCodeAt(i);
+    if (code < 0x80) {
+      bytes.push(code);
+    } else if (code < 0x800) {
+      bytes.push(0xC0 | (code >> 6), 0x80 | (code & 0x3F));
+    } else if (code < 0xD800 || code >= 0xE000) {
+      bytes.push(0xE0 | (code >> 12), 0x80 | ((code >> 6) & 0x3F), 0x80 | (code & 0x3F));
+    } else {
+      i++;
+      code = 0x10000 + (((code & 0x3FF) << 10) | (jsonStr.charCodeAt(i) & 0x3FF));
+      bytes.push(0xF0 | (code >> 18), 0x80 | ((code >> 12) & 0x3F), 0x80 | ((code >> 6) & 0x3F), 0x80 | (code & 0x3F));
+    }
   }
-  var b64 = btoa(binary);
+  // Manual base64 encoding
+  var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  var b64 = '';
+  for (var i = 0; i < bytes.length; i += 3) {
+    var b1 = bytes[i], b2 = i+1 < bytes.length ? bytes[i+1] : 0, b3 = i+2 < bytes.length ? bytes[i+2] : 0;
+    b64 += chars.charAt(b1 >> 2);
+    b64 += chars.charAt(((b1 & 3) << 4) | (b2 >> 4));
+    b64 += i+1 < bytes.length ? chars.charAt(((b2 & 15) << 2) | (b3 >> 6)) : '=';
+    b64 += i+2 < bytes.length ? chars.charAt(b3 & 63) : '=';
+  }
   
-  var body = {
-    message: 'Sync',
-    content: b64,
-    branch: 'main'
-  };
+  var body = { message: 'Sync', content: b64, branch: 'main' };
   if (ghSha) body.sha = ghSha;
   
   return fetch(GHA, {
     method: 'PUT',
-    headers: {
-      Authorization: 'token ' + syncConfig.password,
-      'Content-Type': 'application/json'
-    },
+    headers: { Authorization: 'token ' + syncConfig.password, 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
-  })
-  .then(function(resp) {
-    if (!resp.ok) throw new Error('ghWrite: ' + resp.status);
-    return resp.json();
-  })
-  .then(function(json) {
-    ghSha = json.content.sha;
-  })
-  .catch(function(e) {
-    console.warn('ghWrite error:', e);
-  });
-}function ghRead() {
+  }).then(function(r) { if (!r.ok) throw new Error('W:'+r.status); return r.json(); })
+    .then(function(j) { ghSha = j.content.sha; })
+    .catch(function(e) { console.warn('Write error:', e); });
+}
+function ghRead() {
   return fetch(GHA, { headers: { Authorization: 'token ' + syncConfig.password } })
     .then(function(resp) {
       if (resp.status === 404) return null;
