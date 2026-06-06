@@ -17,6 +17,7 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 .countdown-days{font-size:48px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .countdown-label{font-size:12px;color:var(--text2);margin-top:4px}
 .countdown-title{font-size:16px;font-weight:600;margin-top:8px}
+.countdown-since{margin-top:10px;font-size:18px;font-weight:700;color:var(--accent2)}
 .add-btn{width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:20px}
 .add-btn:active{transform:scale(0.98)}
 .memory-list{display:flex;flex-direction:column;gap:16px}
@@ -27,16 +28,22 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 .memory-delete{position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:4px 8px;color:var(--text2);font-size:11px;cursor:pointer}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:100}
 .modal-overlay.active{display:flex}
-.modal{background:#1a1a30;border-radius:20px;padding:24px;width:calc(100% - 32px);max-width:480px}
+.modal{background:#1a1a30;border-radius:20px;padding:24px;width:calc(100% - 32px);max-width:480px;max-height:90vh;overflow-y:auto}
 .modal h2{font-size:20px;margin-bottom:16px;text-align:center}
 .form-group{margin-bottom:16px}
 .form-group label{display:block;font-size:13px;color:var(--text2);margin-bottom:4px}
-.form-group input,.form-group textarea{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:var(--text);font-size:15px;font-family:inherit}
+.form-group input,.form-group textarea,.form-group select{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:var(--text);font-size:15px;font-family:inherit}
 .form-group textarea{min-height:80px;resize:vertical}
+.form-group select{appearance:none}
 .btn-row{display:flex;gap:12px;margin-top:20px}
 .btn{flex:1;padding:14px;border-radius:14px;border:none;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
 .btn-save{background:linear-gradient(135deg,var(--accent),var(--accent2));color:white}
 .btn-cancel{background:rgba(255,255,255,0.05);color:var(--text2);border:1px solid rgba(255,255,255,0.1)}
+.cal-type-toggle{display:flex;background:rgba(255,255,255,0.05);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.cal-type-toggle button{flex:1;padding:8px 0;font-size:13px;border:none;background:transparent;color:var(--text2);cursor:pointer;font-family:inherit}
+.cal-type-toggle button.active{background:rgba(255,107,157,0.2);color:var(--accent);font-weight:600}
+.date-row{display:flex;gap:8px}
+.date-row .form-group{flex:1}
 </style>
 </head>
 <body>
@@ -48,10 +55,11 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
   </div>
   
   <div class="countdown" id="countdown">
-    <div class="countdown-label">下一个纪念日</div>
+    <div class="countdown-label" id="countdownLabel">下一个纪念日</div>
     <div class="countdown-days" id="countdownDays">-</div>
-    <div class="countdown-label">天</div>
     <div class="countdown-title" id="countdownTitle">添加第一个纪念日</div>
+    <div class="countdown-label" id="countdownDate"></div>
+    <div class="countdown-since" id="countdownSince"></div>
   </div>
   
   <button class="add-btn" onclick="showAddModal()">+ 添加纪念日</button>
@@ -62,10 +70,25 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 <div class="modal-overlay" id="addModal">
   <div class="modal">
     <h2>添加纪念日</h2>
-    <div class="form-group">
+    
+    <div class="cal-type-toggle" id="calTypeToggle">
+      <button class="active" onclick="setCalType('solar')">☀️ 阳历</button>
+      <button onclick="setCalType('lunar')">🌙 阴历</button>
+    </div>
+    
+    <div class="form-group" id="solarDateGroup">
       <label>日期</label>
       <input type="date" id="inputDate">
     </div>
+    
+    <div id="lunarDateGroup" style="display:none">
+      <div class="date-row">
+        <div class="form-group"><label>年份</label><select id="lunarYear"></select></div>
+        <div class="form-group"><label>月份</label><select id="lunarMonth" onchange="updateLunarDays()"></select></div>
+        <div class="form-group"><label>日期</label><select id="lunarDay"></select></div>
+      </div>
+    </div>
+    
     <div class="form-group">
       <label>标题</label>
       <input type="text" id="inputTitle" placeholder="给这个日子取个名字...">
@@ -96,260 +119,316 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 </div>
 
 <script>
-var memories = [];
-var ghToken = localStorage.getItem('gh_token') || '';
+// ========== 农历算法 ==========
+var LI=[0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x16a95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06aa0,0x1a6c4,0x0aae0,0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a4d0,0x0d150,0x0f252,0x0d520];
+var LMS=['','正月','二月','三月','四月','五月','六月','七月','八月','九月','十月','冬月','腊月'];
+var LDS=['','初一','初二','初三','初四','初五','初六','初七','初八','初九','初十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
+var ST=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+var BR=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
 
-function showAddModal() {
+function lI(y){return LI[y-1900]}
+function lpM(y){return lI(y)&0xf}
+function lpD(y){return lpM(y)?(lI(y)&0x10000?30:29):0}
+function mD(y,m){return lI(y)&(0x10000>>m)?30:29}
+
+// 阳历 → 阴历
+function s2l(y,m,d){
+  var base=new Date(1900,0,31);
+  var dt=new Date(y,m-1,d);
+  var off=Math.floor((dt-base)/86400000);
+  var ly,lm=1,ld,isL=false;
+  for(ly=1900;ly<2101&&off>0;ly++){
+    var dy=lI(ly);var s=348;
+    for(var i=0x8000;i>0x8;i>>=1)s+=(dy&i?1:0);
+    s+=lpD(ly);if(off<s)break;off-=s;
+  }
+  var lp=lpM(ly);
+  while(off>=0&&lm<=12){
+    var md=mD(ly,lm);
+    if(off<md){ld=off+1;break}
+    off-=md;
+    if(lp===lm){
+      var ld2=lpD(ly);
+      if(off<ld2){isL=true;ld=off+1;break}
+      off-=ld2;
+    }
+    lm++;if(lm>12)break;
+  }
+  if(ld===undefined)ld=off+1;
+  return{year:ly,month:Math.min(lm,12),day:Math.min(ld,30),isLeap:isL};
+}
+
+// 阴历 → 阳历
+function l2s(ly,lm,ld,isL){
+  var sd=new Date(ly,0,1);
+  var sf=null;
+  for(var d=0;d<60;d++){
+    var cd=new Date(ly,0,1+d);
+    var l=s2l(cd.getFullYear(),cd.getMonth()+1,cd.getDate());
+    if(l.month===1&&l.day===1&&!l.isLeap){sf=cd;break}
+  }
+  if(!sf)return{year:ly,month:1,day:1};
+  for(var d=0;d<400;d++){
+    var cd=new Date(sf.getTime()+d*86400000);
+    var l=s2l(cd.getFullYear(),cd.getMonth()+1,cd.getDate());
+    if(l.month===lm&&l.day===ld&&l.isLeap===isL)return{year:cd.getFullYear(),month:cd.getMonth()+1,day:cd.getDate()}
+  }
+  for(var d=0;d<400;d++){
+    var cd=new Date(sf.getTime()+d*86400000);
+    var l=s2l(cd.getFullYear(),cd.getMonth()+1,cd.getDate());
+    if(l.month===lm&&l.day===ld&&!l.isLeap)return{year:cd.getFullYear(),month:cd.getMonth()+1,day:cd.getDate()}
+  }
+  return{year:ly,month:1,day:1};
+}
+
+// ========== 数据 ==========
+var memories=[],ghToken=localStorage.getItem('gh_token')||'',calType='solar';
+
+// ========== 阴历下拉框 ==========
+function initLunarYear(){
+  var s=document.getElementById('lunarYear');
+  s.innerHTML='';
+  var y=new Date().getFullYear();
+  for(var i=1900;i<=y;i++)s.innerHTML+='<option value="'+i+'">'+i+'年</option>';
+  s.value=y;
+}
+
+function initLunarMonth(ly){
+  var s=document.getElementById('lunarMonth');
+  var y=parseInt(ly)||new Date().getFullYear();
+  var lp=lpM(y);
+  s.innerHTML='';
+  for(var m=1;m<=12;m++){
+    s.innerHTML+='<option value="'+m+'">'+LMS[m]+'</option>';
+    if(lp===m)s.innerHTML+='<option value="r'+m+'">闰'+LMS[m]+'</option>';
+  }
+}
+
+function updateLunarDays(){
+  var ys=document.getElementById('lunarYear'),ms=document.getElementById('lunarMonth'),ds=document.getElementById('lunarDay');
+  if(!ys||!ms||!ds)return;
+  var y=parseInt(ys.value),mv=ms.value;
+  if(!mv)return;
+  var mn=mv.charAt(0)==='r'?parseInt(mv.substring(1)):parseInt(mv);
+  if(mn<1||mn>12)return;
+  var d=mv.charAt(0)==='r'?lpD(y):mD(y,mn);
+  ds.innerHTML='';
+  for(var i=1;i<=d;i++)ds.innerHTML+='<option value="'+i+'">'+LDS[i]+'</option>';
+}
+
+function setCalType(t){
+  calType=t;
+  var btns=document.querySelectorAll('#calTypeToggle button');
+  btns[0].classList.toggle('active',t==='solar');
+  btns[1].classList.toggle('active',t==='lunar');
+  document.getElementById('solarDateGroup').style.display=t==='solar'?'block':'none';
+  document.getElementById('lunarDateGroup').style.display=t==='lunar'?'block':'none';
+}
+
+// ========== 纪念日 CRUD ==========
+function showAddModal(){
   document.getElementById('addModal').classList.add('active');
-  document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('inputDate').value=new Date().toISOString().split('T')[0];
+  setCalType('solar');
+  initLunarYear();
+  initLunarMonth(new Date().getFullYear());
+  updateLunarDays();
 }
 
-function hideAddModal() {
-  document.getElementById('addModal').classList.remove('active');
-}
+function hideAddModal(){document.getElementById('addModal').classList.remove('active');}
 
-function showSettings() {
+function showSettings(){
   document.getElementById('settingsModal').classList.add('active');
-  document.getElementById('inputToken').value = ghToken;
+  document.getElementById('inputToken').value=ghToken;
 }
 
-function hideSettings() {
-  document.getElementById('settingsModal').classList.remove('active');
-}
+function hideSettings(){document.getElementById('settingsModal').classList.remove('active');}
 
-function saveToken() {
-  ghToken = document.getElementById('inputToken').value.trim();
-  localStorage.setItem('gh_token', ghToken);
+function saveToken(){
+  ghToken=document.getElementById('inputToken').value.trim();
+  localStorage.setItem('gh_token',ghToken);
   hideSettings();
-  if (ghToken) {
-    ghRead();
-  }
+  if(ghToken)ghRead();
 }
 
-function saveMemory() {
-  var date = document.getElementById('inputDate').value;
-  var title = document.getElementById('inputTitle').value.trim();
-  var text = document.getElementById('inputText').value.trim();
-  
-  if (!title) { alert('请输入标题'); return; }
-  
-  memories.push({
-    id: Date.now(),
-    date: date,
-    title: title,
-    text: text
-  });
-  
-  console.log('Saving memory:', title, 'Total memories:', memories.length);
-  console.log('ghToken exists:', !!ghToken);
-  
-  localStorage.setItem('memories', JSON.stringify(memories));
-  
-  if (ghToken) {
-    console.log('Calling ghWrite...');
-    ghWrite();
+function saveMemory(){
+  var title=document.getElementById('inputTitle').value.trim();
+  var text=document.getElementById('inputText').value.trim();
+  if(!title){alert('请输入标题');return}
+
+  var dateVal,lunarYear,lunarMonth,lunarDay,isLeap,lunarDisplay;
+
+  if(calType==='lunar'){
+    lunarYear=parseInt(document.getElementById('lunarYear').value);
+    var mv=document.getElementById('lunarMonth').value;
+    if(mv.charAt(0)==='r'){lunarMonth=parseInt(mv.substring(1));isLeap=true;}
+    else{lunarMonth=parseInt(mv);isLeap=false;}
+    lunarDay=parseInt(document.getElementById('lunarDay').value);
+    var sol=l2s(lunarYear,lunarMonth,lunarDay,isLeap);
+    dateVal=sol.year+'-'+String(sol.month).padStart(2,'0')+'-'+String(sol.day).padStart(2,'0');
+    lunarDisplay=ST[(lunarYear-4)%10]+BR[(lunarYear-4)%12]+'年 '+(isLeap?'闰':'')+LMS[lunarMonth]+LDS[lunarDay];
   } else {
-    console.warn('No ghToken, skipping GitHub sync');
+    dateVal=document.getElementById('inputDate').value;
+    lunarYear=lunarMonth=lunarDay=null;isLeap=false;lunarDisplay=null;
   }
-  
+
+  memories.push({
+    id:Date.now(),date:dateVal,title:title,text:text,
+    calType:calType,isLeap:isLeap,
+    lunarYear:lunarYear,lunarMonth:lunarMonth,lunarDay:lunarDay,
+    lunarDisplay:lunarDisplay
+  });
+
+  localStorage.setItem('memories',JSON.stringify(memories));
+  if(ghToken)ghWrite().catch(function(e){console.warn(e)});
   hideAddModal();
   render();
 }
 
-function deleteMemory(id) {
-  if (!confirm('确定删除吗？')) return;
-  memories = memories.filter(function(m) { return m.id !== id; });
-  localStorage.setItem('memories', JSON.stringify(memories));
-  if (ghToken) {
-    ghWrite();
-  }
+function deleteMemory(id){
+  if(!confirm('确定删除吗？'))return;
+  memories=memories.filter(function(m){return m.id!==id});
+  localStorage.setItem('memories',JSON.stringify(memories));
+  if(ghToken)ghWrite().catch(function(e){console.warn(e)});
   render();
 }
 
-function ghRead() {
-  fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json', {
-    headers: { 'Authorization': 'token ' + ghToken }
+// ========== GitHub 同步 ==========
+function ghRead(){
+  fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json',{
+    headers:{'Authorization':'token '+ghToken}
   })
-  .then(function(r) {
-    if (!r.ok) return null;
-    return r.json();
-  })
-  .then(function(data) {
-    if (data && data.content) {
-      var b64 = data.content.replace(/\s/g, '');
-      var binary = atob(b64);
-      var bytes = [];
-      for (var i = 0; i < binary.length; i++) {
-        bytes.push(binary.charCodeAt(i));
-      }
-      var decoder = new TextDecoder('utf-8');
-      var text = decoder.decode(new Uint8Array(bytes));
-      memories = JSON.parse(text);
-      localStorage.setItem('memories', JSON.stringify(memories));
+  .then(function(r){if(!r.ok)return null;return r.json()})
+  .then(function(data){
+    if(data&&data.content){
+      var b64=data.content.replace(/\s/g,'');
+      var binary=atob(b64);
+      var bytes=[];
+      for(var i=0;i<binary.length;i++)bytes.push(binary.charCodeAt(i));
+      var decoder=new TextDecoder('utf-8');
+      var text=decoder.decode(new Uint8Array(bytes));
+      memories=JSON.parse(text);
+      localStorage.setItem('memories',JSON.stringify(memories));
       render();
     }
   })
-  .catch(function(e) {
-    console.warn('Read error:', e);
-  });
+  .catch(function(e){console.warn('Read error:',e)});
 }
 
-function ghWrite() {
-  console.log('ghWrite called, memories:', memories.length);
-  
-  var jsonStr = JSON.stringify(memories);
-  console.log('JSON string length:', jsonStr.length);
-  
-  var blob = new Blob([jsonStr], { type: 'text/plain' });
-  var reader = new FileReader();
-  reader.onload = function() {
-    var b64 = reader.result.split(',')[1];
-    console.log('Base64 prepared, length:', b64.length);
-    
-    // 尝试写入，最多重试3次
-    attemptWrite(b64, 0);
+function ghWrite(){
+  var jsonStr=JSON.stringify(memories);
+  var blob=new Blob([jsonStr],{type:'text/plain'});
+  var reader=new FileReader();
+  reader.onload=function(){
+    var b64=reader.result.split(',')[1];
+    fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json',{
+      headers:{'Authorization':'token '+ghToken}
+    })
+    .then(function(r){if(!r.ok)throw new Error('SHA: '+r.status);return r.json()})
+    .then(function(data){
+      return fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json',{
+        method:'PUT',
+        headers:{'Authorization':'token '+ghToken,'Content-Type':'application/json'},
+        body:JSON.stringify({message:'Sync',content:b64,branch:'main',sha:data.sha})
+      })
+    })
+    .then(function(r){if(!r.ok)return r.text().then(function(t){throw new Error(t)});return r.json()})
+    .then(function(){console.log('Write success')})
+    .catch(function(e){console.error('Write error:',e);alert('同步失败: '+e.message)});
   };
   reader.readAsDataURL(blob);
 }
 
-function attemptWrite(b64, retryCount) {
-  if (retryCount >= 3) {
-    alert('同步失败: 重试次数过多，请稍后再试');
+// ========== 倒计时 ==========
+function getAnni(m){
+  var today=new Date();today.setHours(0,0,0,0);
+  var td;
+  if(m.calType==='lunar'){
+    var best=null,bd=99999;
+    for(var y=today.getFullYear();y<=today.getFullYear()+2;y++){
+      var s=l2s(y,m.lunarMonth,m.lunarDay,m.isLeap);
+      var cd=new Date(s.year,s.month-1,s.day);
+      var diff=Math.ceil((cd-today)/86400000);
+      if(diff===0)return{title:m.title,days:0,date:{year:s.year,month:s.month,day:s.day},today:true};
+      if(diff>0&&diff<bd){bd=diff;best=s}
+    }
+    if(best)td=new Date(best.year,best.month-1,best.day);
+    else{var s2=l2s(today.getFullYear()+1,m.lunarMonth,m.lunarDay,m.isLeap);td=new Date(s2.year,s2.month-1,s2.day)}
+  } else {
+    var p=m.date.split('-');
+    var md=new Date(+p[0],p[1]-1,+p[2]);
+    td=new Date(today.getFullYear(),md.getMonth(),md.getDate());
+    if(td.getTime()===today.getTime())return{title:m.title,days:0,date:{year:today.getFullYear(),month:today.getMonth()+1,day:today.getDate()},today:true};
+    if(td<=today)td=new Date(today.getFullYear()+1,md.getMonth(),md.getDate());
+  }
+  var days=Math.ceil((td-today)/86400000);
+  return{title:m.title,days:days,date:{year:td.getFullYear(),month:td.getMonth()+1,day:td.getDate()},today:false};
+}
+
+// ========== 渲染 ==========
+function loadMemories(){
+  var data=localStorage.getItem('memories');
+  memories=data?JSON.parse(data):[];
+}
+
+function fmtDate(ds){
+  var p=ds.split('-');
+  var d=new Date(+p[0],p[1]-1,+p[2]);
+  return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日';
+}
+
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+function render(){
+  var list=document.getElementById('memoryList');
+  var cd=document.getElementById('countdown');
+
+  if(!memories.length){
+    list.innerHTML='<div style="text-align:center;color:var(--text2);padding:40px">还没有纪念日<br>点击上方按钮添加第一个</div>';
+    document.getElementById('countdownDays').textContent='-';
+    document.getElementById('countdownTitle').textContent='添加第一个纪念日';
+    document.getElementById('countdownDate').textContent='';
+    document.getElementById('countdownSince').innerHTML='';
     return;
   }
-  
-  // 获取最新的 SHA
-  fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json', {
-    headers: { 'Authorization': 'token ' + ghToken }
-  })
-  .then(function(r) { 
-    if (!r.ok) {
-      throw new Error('获取SHA失败: ' + r.status);
-    }
-    return r.json(); 
-  })
-  .then(function(data) {
-    var sha = data.sha;
-    console.log('Got SHA:', sha, '(retry:', retryCount, ')');
-    
-    var payload = JSON.stringify({
-      message: 'Sync',
-      content: b64,
-      branch: 'main',
-      sha: sha
-    });
-    
-    return fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json', {
-      method: 'PUT',
-      headers: {
-        'Authorization': 'token ' + ghToken,
-        'Content-Type': 'application/json'
-      },
-      body: payload
-    });
-  })
-  .then(function(r) { 
-    if (r.status === 409) {
-      // SHA 冲突，重试
-      console.warn('SHA conflict, retrying... (' + (retryCount + 1) + '/3)');
-      setTimeout(function() {
-        attemptWrite(b64, retryCount + 1);
-      }, 500);
-      return;
-    }
-    
-    if (!r.ok) {
-      return r.text().then(function(errText) {
-        throw new Error('写入失败: ' + r.status + ' - ' + errText);
-      });
-    }
-    return r.json(); 
-  })
-  .then(function(result) {
-    if (result) {
-      console.log('Write success');
-      alert('同步成功! 数据已保存到 GitHub');
-    }
-  })
-  .catch(function(e) {
-    console.error('Write error:', e);
-    alert('同步失败: ' + e.message);
+
+  // 倒计时
+  var nearest=null,min=99999;
+  memories.forEach(function(m){
+    var a=getAnni(m);
+    if(a.days<min){min=a.days;nearest=a}
   });
-}
 
-function loadMemories() {
-  var data = localStorage.getItem('memories');
-  memories = data ? JSON.parse(data) : [];
-}
-
-function render() {
-  var list = document.getElementById('memoryList');
-  
-  if (memories.length === 0) {
-    list.innerHTML = '<div style="text-align:center;color:var(--text2);padding:40px">还没有纪念日<br>点击上方按钮添加第一个</div>';
-    document.getElementById('countdownDays').textContent = '-';
-    document.getElementById('countdownTitle').textContent = '添加第一个纪念日';
-    return;
+  if(nearest){
+    if(nearest.today){
+      document.getElementById('countdownLabel').textContent='🎉 今天就是';
+      document.getElementById('countdownDays').textContent='今天!';
+    } else {
+      document.getElementById('countdownLabel').textContent='距离';
+      document.getElementById('countdownDays').textContent=nearest.days;
+    }
+    document.getElementById('countdownTitle').textContent=nearest.title;
+    document.getElementById('countdownDate').textContent=nearest.date.year+'年'+nearest.date.month+'月'+nearest.date.day+'日';
   }
-  
-  var sorted = memories.slice().sort(function(a, b) {
-    return new Date(b.date) - new Date(a.date);
+
+  // 列表
+  var sorted=memories.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date)});
+  var html='';
+  sorted.forEach(function(m){
+    var dd=m.calType==='lunar'?fmtDate(m.date)+' · 🌙 '+(m.lunarDisplay||''):fmtDate(m.date);
+    html+='<div class="memory-card">';
+    html+='<div class="memory-date">'+dd+'</div>';
+    html+='<div class="memory-title">'+esc(m.title)+'</div>';
+    if(m.text)html+='<div class="memory-text">'+esc(m.text)+'</div>';
+    html+='<button class="memory-delete" onclick="deleteMemory('+m.id+')">删除</button>';
+    html+='</div>';
   });
-  
-  var today = new Date();
-  today.setHours(0, 0, 0, 0);
-  var nextAnniversary = null;
-  var minDays = Infinity;
-  
-  memories.forEach(function(m) {
-    var date = new Date(m.date);
-    var nextDate = new Date(today.getFullYear(), date.getMonth(), date.getDate());
-    if (nextDate <= today) {
-      nextDate = new Date(today.getFullYear() + 1, date.getMonth(), date.getDate());
-    }
-    var days = Math.ceil((nextDate - today) / (1000 * 60 * 60 * 24));
-    if (days < minDays) {
-      minDays = days;
-      nextAnniversary = { title: m.title, days: days };
-    }
-  });
-  
-  if (nextAnniversary) {
-    document.getElementById('countdownDays').textContent = nextAnniversary.days;
-    document.getElementById('countdownTitle').textContent = nextAnniversary.title;
-  }
-  
-  var html = '';
-  sorted.forEach(function(m) {
-    html += '<div class="memory-card">';
-    html += '<div class="memory-date">' + formatDate(m.date) + '</div>';
-    html += '<div class="memory-title">' + escapeHtml(m.title) + '</div>';
-    if (m.text) {
-      html += '<div class="memory-text">' + escapeHtml(m.text) + '</div>';
-    }
-    html += '<button class="memory-delete" onclick="deleteMemory(' + m.id + ')">删除</button>';
-    html += '</div>';
-  });
-  
-  list.innerHTML = html;
+  list.innerHTML=html;
 }
 
-function formatDate(dateStr) {
-  var date = new Date(dateStr);
-  return date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日';
-}
-
-function escapeHtml(str) {
-  var div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
+// ========== 初始化 ==========
 loadMemories();
 render();
-if (ghToken) {
-  ghRead();
-}
 </script>
 </body>
 </html>
