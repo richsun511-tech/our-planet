@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>我们的星球</title>
+<style>
+:root{--bg:#0a0a1a;--text:#e0e0e0;--text2:#a0a0b8;--accent:#ff6b9d;--accent2:#ff9a56}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:100px}
+.app{max-width:480px;margin:0 auto;padding:16px}
+.header{text-align:center;padding:20px 0}
+.header h1{font-size:24px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header p{font-size:13px;color:var(--text2);margin-top:4px}
+.settings-btn{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 12px;color:var(--text2);font-size:14px;cursor:pointer}
+.countdown{background:rgba(255,255,255,0.05);border-radius:16px;padding:20px;text-align:center;margin-bottom:20px}
+.countdown-days{font-size:48px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.countdown-label{font-size:12px;color:var(--text2);margin-top:4px}
+.countdown-title{font-size:16px;font-weight:600;margin-top:8px}
+.add-btn{width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:20px}
+.add-btn:active{transform:scale(0.98)}
+.memory-list{display:flex;flex-direction:column;gap:16px}
+.memory-card{background:rgba(255,255,255,0.05);border-radius:16px;padding:16px;position:relative}
+.memory-date{font-size:12px;color:var(--accent);margin-bottom:4px}
+.memory-title{font-size:16px;font-weight:600}
+.memory-text{font-size:13px;color:var(--text2);margin-top:4px}
+.memory-delete{position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:4px 8px;color:var(--text2);font-size:11px;cursor:pointer}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:100}
+.modal-overlay.active{display:flex}
+.modal{background:#1a1a30;border-radius:20px;padding:24px;width:calc(100% - 32px);max-width:480px}
+.modal h2{font-size:20px;margin-bottom:16px;text-align:center}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;color:var(--text2);margin-bottom:4px}
+.form-group input,.form-group textarea{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:var(--text);font-size:15px;font-family:inherit}
+.form-group textarea{min-height:80px;resize:vertical}
+.btn-row{display:flex;gap:12px;margin-top:20px}
+.btn{flex:1;padding:14px;border-radius:14px;border:none;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-save{background:linear-gradient(135deg,var(--accent),var(--accent2));color:white}
+.btn-cancel{background:rgba(255,255,255,0.05);color:var(--text2);border:1px solid rgba(255,255,255,0.1)}
+</style>
+</head>
+<body>
+<div class="app">
+  <button class="settings-btn" onclick="showSettings()">⚙️</button>
+  <div class="header">
+    <h1>我们的星球</h1>
+    <p>每一颗果实，都是我们的回忆</p>
+  </div>
+  
+  <div class="countdown" id="countdown">
+    <div class="countdown-label">下一个纪念日</div>
+    <div class="countdown-days" id="countdownDays">-</div>
+    <div class="countdown-label">天</div>
+    <div class="countdown-title" id="countdownTitle">添加第一个纪念日</div>
+  </div>
+  
+  <button class="add-btn" onclick="showAddModal()">+ 添加纪念日</button>
+  
+  <div class="memory-list" id="memoryList"></div>
+</div>
+
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <h2>添加纪念日</h2>
+    <div class="form-group">
+      <label>日期</label>
+      <input type="date" id="inputDate">
+    </div>
+    <div class="form-group">
+      <label>标题</label>
+      <input type="text" id="inputTitle" placeholder="给这个日子取个名字...">
+    </div>
+    <div class="form-group">
+      <label>想说的话</label>
+      <textarea id="inputText" placeholder="写下你想说的话..."></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-cancel" onclick="hideAddModal()">取消</button>
+      <button class="btn btn-save" onclick="saveMemory()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h2>同步设置</h2>
+    <div class="form-group">
+      <label>GitHub Token</label>
+      <input type="password" id="inputToken" placeholder="输入 GitHub Token">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-cancel" onclick="hideSettings()">取消</button>
+      <button class="btn btn-save" onclick="saveToken()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var memories = [];
+var ghToken = localStorage.getItem('gh_token') || '';
+
+function showAddModal() {
+  document.getElementById('addModal').classList.add('active');
+  document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
+}
+
+function hideAddModal() {
+  document.getElementById('addModal').classList.remove('active');
+}
+
+function showSettings() {
+  document.getElementById('settingsModal').classList.add('active');
+  document.getElementById('inputToken').value = ghToken;
+}
+
+function hideSettings() {
+  document.getElementById('settingsModal').classList.remove('active');
+}
+
+function saveToken() {
+  ghToken = document.getElementById('inputToken').value.trim();
+  localStorage.setItem('gh_token', ghToken);
+  hideSettings();
+  if (ghToken) {
+    ghRead();
+  }
+}
+
+function saveMemory() {
+  var date = document.getElementById('inputDate').value;
+  var title = document.getElementById('inputTitle').value.trim();
+  var text = document.getElementById('inputText').value.trim();
+  
+  if (!title) { alert('请输入标题'); return; }
+  
+  memories.push({
+    id: Date.now(),
+    date: date,
+    title: title,
+    text: text
+  });
+  
+  localStorage.setItem('memories', JSON.stringify(memories));
+  if (ghToken) {
+    ghWrite();
+  }
+  hideAddModal();
+  render();
+}
+
+function deleteMemory(id) {
+  if (!confirm('确定删除吗？')) return;
+  memories = memories.filter(function(m) { return m.id !== id; });
+  localStorage.setItem('memories', JSON.stringify(memories));
+  if (ghToken) {
+    ghWrite();
+  }
+  render();
+}
+
+function ghRead() {
+  fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json', {
+    headers: { 'Authorization': 'token ' + ghToken }
+  })
+  .then(function(r) {
+    if (!r.ok) return null;
+    return r.json();
+  })
+  .then(function(data) {
+    if (data && data.content) {
+      var b64 = data.content.replace(/\s/g, '');
+      var binary = atob(b64);
+      var bytes = [];
+      for (var i = 0; i < binary.length; i++) {
+        bytes.push(binary.charCodeAt(i));
+      }
+      var decoder = new TextDecoder('utf-8');
+      var text = decoder.decode(new Uint8Array(bytes));
+      memories = JSON.parse(text);
+      localStorage.setItem('memories', JSON.stringify(memories));
+      render();
+    }
+  })
+  .catch(function(e) {
+    console.warn('Read error:', e);
+  });
+}
+
+function ghWrite() {
+  console.log('ghWrite called, memories:', memories.length);
+  
+  var jsonStr = JSON.stringify(memories);
+  console.log('JSON string length:', jsonStr.length);
+  
+  var blob = new Blob([jsonStr], { type: 'text/plain' });
+  var reader = new FileReader();
+  reader.onload = function() {
+    var b64 = reader.result.split(',')[1];
+    console.log('Base64 prepared, length:', b64.length);
+    
+    // 先获取最新的 SHA
+    fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json', {
+      headers: { 'Authorization': 'token ' + ghToken }
+    })
+    .then(function(r) { 
+      if (!r.ok) {
+        console.error('Failed to get SHA:', r.status, r.statusText);
+        alert('获取SHA失败: ' + r.status + ' ' + r.statusText);
+        throw new Error('获取SHA失败: ' + r.status);
+      }
+      return r.json(); 
+    })
+    .then(function(data) {
+      var sha = data.sha;
+      console.log('Got SHA:', sha);
+      
+      var payload = JSON.stringify({
+        message: 'Sync',
+        content: b64,
+        branch: 'main',
+        sha: sha
+      });
+      console.log('Payload length:', payload.length);
+      
+      return fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json', {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'token ' + ghToken,
+          'Content-Type': 'application/json'
+        },
+        body: payload
+      });
+    })
+    .then(function(r) { 
+      console.log('Write response status:', r.status, r.statusText);
+      if (!r.ok) {
+        return r.text().then(function(text) {
+          console.error('Write failed:', text);
+          alert('写入失败: ' + r.status + ' - ' + text);
+          throw new Error('写入失败: ' + r.status);
+        });
+      }
+      return r.json(); 
+    })
+    .then(function() {
+      console.log('Write success');
+    })
+    .catch(function(e) {
+      console.error('Write error:', e);
+      if (!e.message.includes('写入失败')) {
+        alert('同步失败: ' + e.message);
+      }
+    });
+  };
+  reader.readAsDataURL(blob);
+}
+
+function loadMemories() {
+  var data = localStorage.getItem('memories');
+  memories = data ? JSON.parse(data) : [];
+}
+
+function render() {
+  var list = document.getElementById('memoryList');
+  
+  if (memories.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:var(--text2);padding:40px">还没有纪念日<br>点击上方按钮添加第一个</div>';
+    document.getElementById('countdownDays').textContent = '-';
+    document.getElementById('countdownTitle').textContent = '添加第一个纪念日';
+    return;
+  }
+  
+  var sorted = memories.slice().sort(function(a, b) {
+    return new Date(b.date) - new Date(a.date);
+  });
+  
+  var today = new Date();
+  today.setHours(0, 0, 0, 0);
+  var nextAnniversary = null;
+  var minDays = Infinity;
+  
+  memories.forEach(function(m) {
+    var date = new Date(m.date);
+    var nextDate = new Date(today.getFullYear(), date.getMonth(), date.getDate());
+    if (nextDate <= today) {
+      nextDate = new Date(today.getFullYear() + 1, date.getMonth(), date.getDate());
+    }
+    var days = Math.ceil((nextDate - today) / (1000 * 60 * 60 * 24));
+    if (days < minDays) {
+      minDays = days;
+      nextAnniversary = { title: m.title, days: days };
+    }
+  });
+  
+  if (nextAnniversary) {
+    document.getElementById('countdownDays').textContent = nextAnniversary.days;
+    document.getElementById('countdownTitle').textContent = nextAnniversary.title;
+  }
+  
+  var html = '';
+  sorted.forEach(function(m) {
+    html += '<div class="memory-card">';
+    html += '<div class="memory-date">' + formatDate(m.date) + '</div>';
+    html += '<div class="memory-title">' + escapeHtml(m.title) + '</div>';
+    if (m.text) {
+      html += '<div class="memory-text">' + escapeHtml(m.text) + '</div>';
+    }
+    html += '<button class="memory-delete" onclick="deleteMemory(' + m.id + ')">删除</button>';
+    html += '</div>';
+  });
+  
+  list.innerHTML = html;
+}
+
+function formatDate(dateStr) {
+  var date = new Date(dateStr);
+  return date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日';
+}
+
+function escapeHtml(str) {
+  var div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+loadMemories();
+render();
+if (ghToken) {
+  ghRead();
+}
+</script>
+</body>
+</html>
