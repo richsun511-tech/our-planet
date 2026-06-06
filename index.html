@@ -723,7 +723,7 @@ body {
   .app-container { padding: 0 16px 120px; }
   .modal-sheet { border-radius: 24px; margin: 0 auto 20px; }
 }
-</style>
+.pull-refresh{position:fixed;top:0;left:50%;transform:translateX(-50%);padding:10px 20px;background:rgba(255,255,255,0.9);border-radius:0 0 16px 16px;display:none;z-index:999;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.1)}.sync-status-indicator{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}.sync-status-indicator.synced{background:#57d9a3}.sync-status-indicator.syncing{background:#ff9a56;animation:pulse 1s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}</style>
 </head>
 <body>
 
@@ -2324,7 +2324,7 @@ function setupNotificationTimer() {
   setInterval(scheduleNotifications, 3600000); // 每小时检查
 }
 
-function init() {
+function init() {  // 鑷姩杞鍚屾锛堟瘡2鍒嗛挓锛? setInterval(function(){if(syncCfg.enabled)ghRead()},120000);  // 鎷夊彇鍒锋柊  var touchStartY=0;document.addEventListener("touchstart",function(e){touchStartY=e.touches[0].clientY});document.addEventListener("touchend",function(e){if(window.scrollY===0&&e.changedTouches[0].clientY-touchStartY>80){if(syncCfg.enabled)ghRead()}});
   initStars();
   loadSyncConfig();
   applyAvatar(loadAvatar());
