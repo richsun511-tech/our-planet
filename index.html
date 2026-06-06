@@ -1240,44 +1240,8 @@ function sanitizeData(arr) {
   });
 }
 
-function ghWrite(data) {
-  var str = JSON.stringify(data);
-  // Use TextEncoder for proper UTF-8 conversion
-  var encoder = new TextEncoder();
-  var utf8Bytes = encoder.encode(str);
-  // Convert to base64 manually
-  var binary = '';
-  for (var i = 0; i < utf8Bytes.length; i++) {
-    binary += String.fromCharCode(utf8Bytes[i]);
-  }
-  var b64 = btoa(binary);
-  
-  var body = {
-    message: 'Sync',
-    content: b64,
-    branch: 'main'
-  };
-  if (ghSha) body.sha = ghSha;
-  
-  return fetch(GHA, {
-    method: 'PUT',
-    headers: {
-      Authorization: 'token ' + syncConfig.password,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(body)
-  })
-  .then(function(resp) {
-    if (!resp.ok) throw new Error('ghWrite: ' + resp.status);
-    return resp.json();
-  })
-  .then(function(json) {
-    ghSha = json.content.sha;
-  })
-  .catch(function(e) {
-    console.warn('ghWrite error:', e);
-  });
-}function ghRead() {
+
+function ghRead() {
   return fetch(GHA, { headers: { Authorization: 'token ' + syncConfig.password } })
     .then(function(resp) {
       if (resp.status === 404) return null;
