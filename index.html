@@ -723,7 +723,7 @@ body {
   .app-container { padding: 0 16px 120px; }
   .modal-sheet { border-radius: 24px; margin: 0 auto 20px; }
 }
-.pull-refresh{position:fixed;top:0;left:50%;transform:translateX(-50%);padding:10px 20px;background:rgba(255,255,255,0.9);border-radius:0 0 16px 16px;display:none;z-index:999;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.1)}.sync-status-indicator{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}.sync-status-indicator.synced{background:#57d9a3}.sync-status-indicator.syncing{background:#ff9a56;animation:pulse 1s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}.pull-refresh{position:fixed;top:0;left:50%;transform:translateX(-50%);padding:10px 20px;background:rgba(255,255,255,0.9);border-radius:0 0 16px 16px;display:none;z-index:999;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.1)}.sync-status-indicator{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}.sync-status-indicator.synced{background:#57d9a3}.sync-status-indicator.syncing{background:#ff9a56;animation:pulse 1s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}</style>
+</style>
 </head>
 <body>
 
@@ -1240,7 +1240,68 @@ function sanitizeData(arr) {
   });
 }
 
-function ghWrite(data){if(!validateData(data)){console.warn("Invalid data skipped");return}updateSyncStatus("syncing");var jsonStr=JSON.stringify(data);var blob=new Blob([jsonStr],{type:"text/plain;charset=UTF-8"});var reader=new FileReader();reader.onload=function(){var b64=reader.result.split(",")[1];fetch(GHA,{headers:{"Authorization":"token "+syncCfg.password}}).then(function(r){if(!r.ok)throw new Error("SHA: "+r.status);return r.json()}).then(function(data){return fetch(GHA,{method:"PUT",headers:{"Authorization":"token "+syncCfg.password,"Content-Type":"application/json"},body:JSON.stringify({message:"Sync",content:b64,branch:"main",sha:data.sha})})}).then(function(r){if(!r.ok)return r.text().then(function(t){throw new Error(t)});return r.json()}).then(function(){console.log("Write success")}).catch(function(e){console.error("Write error:",e);alert("鍚屾澶辫触: "+e.message)})};reader.readAsDataURL(blob)}function ghRead(){updateSyncStatus("syncing");return fetch(GHA,{headers:{"Authorization":"token "+syncCfg.password}}).then(function(r){if(r.status===404)return null;if(!r.ok)throw new Error(r.status);return r.json()}).then(function(j){if(!j)return null;ghSha=j.sha;var binary=atob(j.content.replace(/\s/g,""));var bytes=[];for(var i=0;i<binary.length;i++){bytes.push(binary.charCodeAt(i))}var decoder=new TextDecoder("utf-8");var text=decoder.decode(new Uint8Array(bytes));return JSON.parse(text)}).catch(function(){return null})}function generateId() {
+function ghWrite(data) {
+  var str = JSON.stringify(data);
+  // Use TextEncoder for proper UTF-8 conversion
+  var encoder = new TextEncoder();
+  var utf8Bytes = encoder.encode(str);
+  // Convert to base64 manually
+  var binary = '';
+  for (var i = 0; i < utf8Bytes.length; i++) {
+    binary += String.fromCharCode(utf8Bytes[i]);
+  }
+  var b64 = btoa(binary);
+  
+  var body = {
+    message: 'Sync',
+    content: b64,
+    branch: 'main'
+  };
+  if (ghSha) body.sha = ghSha;
+  
+  return fetch(GHA, {
+    method: 'PUT',
+    headers: {
+      Authorization: 'token ' + syncConfig.password,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  })
+  .then(function(resp) {
+    if (!resp.ok) throw new Error('ghWrite: ' + resp.status);
+    return resp.json();
+  })
+  .then(function(json) {
+    ghSha = json.content.sha;
+  })
+  .catch(function(e) {
+    console.warn('ghWrite error:', e);
+  });
+}function ghRead() {
+  return fetch(GHA, { headers: { Authorization: 'token ' + syncConfig.password } })
+    .then(function(resp) {
+      if (resp.status === 404) return null;
+      if (!resp.ok) throw new Error('ghRead: ' + resp.status);
+      return resp.json();
+    })
+    .then(function(json) {
+      if (!json || !json.content) return null;
+      ghSha = json.sha;
+      var raw = atob(json.content.replace(/\s/g, ''));
+      // Convert binary string back to UTF-8 bytes
+      var bytes = new Uint8Array(raw.length);
+      for (var i = 0; i < raw.length; i++) {
+        bytes[i] = raw.charCodeAt(i);
+      }
+      var decoder = new TextDecoder('utf-8');
+      var str = decoder.decode(bytes);
+      return JSON.parse(str);
+    })
+    .catch(function(e) {
+      console.warn('ghRead error:', e);
+      return null;
+    });
+}function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
 }
 
@@ -2212,7 +2273,11 @@ async function registerSW() {
   }
 }
 
-async 
+async function requestNotification() {
+  if (!('Notification' in window) && !('serviceWorker' in navigator)) {
+    alert('你的浏览器不支持通知。\n\n✅ 解决方法：在 Safari 打开此页面 → 点底部「分享」→「添加到主屏幕」→ 从桌面图标打开 → 再点🔔即可开启。');
+    return;
+  }
 
   // iOS PWA 可能 Notification 对象存在但 permission 调用受限
   // 先尝试 Service Worker 方式
@@ -2320,7 +2385,7 @@ function setupNotificationTimer() {
   setInterval(scheduleNotifications, 3600000); // 每小时检查
 }
 
-function init() {setInterval(function(){if(syncCfg.enabled)ghRead()},120000);var touchStartY=0;document.addEventListener("touchstart",function(e){touchStartY=e.touches[0].clientY});document.addEventListener("touchend",function(e){if(window.scrollY===0&&e.changedTouches[0].clientY-touchStartY>80){if(syncCfg.enabled)ghRead()}});  // 鑷姩杞鍚屾锛堟瘡2鍒嗛挓锛? setInterval(function(){if(syncCfg.enabled)ghRead()},120000);  // 鎷夊彇鍒锋柊  var touchStartY=0;document.addEventListener("touchstart",function(e){touchStartY=e.touches[0].clientY});document.addEventListener("touchend",function(e){if(window.scrollY===0&&e.changedTouches[0].clientY-touchStartY>80){if(syncCfg.enabled)ghRead()}});
+function init() {
   initStars();
   loadSyncConfig();
   applyAvatar(loadAvatar());
