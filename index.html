@@ -723,7 +723,7 @@ body {
   .app-container { padding: 0 16px 120px; }
   .modal-sheet { border-radius: 24px; margin: 0 auto 20px; }
 }
-.empty-state-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;text-align:center;opacity:0;animation:fadeIn 0.5s ease forwards;animation-delay:0.2s}.empty-state-placeholder .empty-icon{font-size:64px;margin-bottom:16px;opacity:0.5}.empty-state-placeholder .empty-text{font-size:15px;color:var(--text2);line-height:1.6}.loading-spinner{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.8);padding:20px 30px;border-radius:16px;z-index:9999;text-align:center;color:#fff}.loading-spinner.active{display:block}.loading-spinner .spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px}@keyframes spin{to{transform:rotate(360deg)}}.fade-in{animation:fadeIn 0.3s ease forwards}@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.memory-card{transition:all 0.3s ease}.memory-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.2)}.loading-spinner{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.8);padding:20px 30px;border-radius:16px;z-index:9999;text-align:center;color:#fff}.loading-spinner.active{display:block}.loading-spinner .spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px}@keyframes spin{to{transform:rotate(360deg)}}.fade-in{animation:fadeIn 0.3s ease forwards}@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.memory-card{transition:all 0.3s ease}.memory-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.2)}</style>
+</style>
 </head>
 <body>
 
@@ -737,7 +737,7 @@ body {
   <div class="planet-header">
     <button class="settings-btn" onclick="openSyncModal()" title="云同步设置">⚙️</button>
     <button class="calendar-btn" onclick="syncToCalendar()" title="同步到苹果日历">📅</button>
-    
+    <button class="notify-btn" id="notifyBtn" onclick="requestNotification()" title="开启消息提醒">🔔</button>
     <div class="planet" onclick="togglePlanetFlip()" title="点击翻转">
       <div class="planet-flip" id="planetFlip">
         <div class="planet-front"></div>
@@ -765,8 +765,8 @@ body {
     <div class="tag-chip" data-tag="纪念日">纪念日</div>
     <div class="tag-chip" data-tag="第一次">第一次</div>
     <div class="tag-chip" data-tag="旅行">旅行</div>
-    <div class="tag-chip" 
-    
+    <div class="tag-chip" data-tag="纪念日">纪念日</div>
+    <div class="tag-chip" data-tag="日常">日常</div>
     <div class="tag-chip" data-tag="惊喜">惊喜</div>
     <div class="tag-chip" data-tag="其他">其他</div>
   </div>
@@ -1240,7 +1240,32 @@ function sanitizeData(arr) {
   });
 }
 
-function generateId() {
+
+function ghRead() {
+  return fetch(GHA, { headers: { Authorization: 'token ' + syncConfig.password } })
+    .then(function(resp) {
+      if (resp.status === 404) return null;
+      if (!resp.ok) throw new Error('ghRead: ' + resp.status);
+      return resp.json();
+    })
+    .then(function(json) {
+      if (!json || !json.content) return null;
+      ghSha = json.sha;
+      var raw = atob(json.content.replace(/\s/g, ''));
+      // Convert binary string back to UTF-8 bytes
+      var bytes = new Uint8Array(raw.length);
+      for (var i = 0; i < raw.length; i++) {
+        bytes[i] = raw.charCodeAt(i);
+      }
+      var decoder = new TextDecoder('utf-8');
+      var str = decoder.decode(bytes);
+      return JSON.parse(str);
+    })
+    .catch(function(e) {
+      console.warn('ghRead error:', e);
+      return null;
+    });
+}function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
 }
 
