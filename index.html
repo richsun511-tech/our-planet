@@ -737,7 +737,7 @@ body {
   <div class="planet-header">
     <button class="settings-btn" onclick="openSyncModal()" title="云同步设置">⚙️</button>
     <button class="calendar-btn" onclick="syncToCalendar()" title="同步到苹果日历">📅</button>
-    <button class="notify-btn" id="notifyBtn" onclick="requestNotification()" title="开启消息提醒">🔔</button>
+    
     <div class="planet" onclick="togglePlanetFlip()" title="点击翻转">
       <div class="planet-flip" id="planetFlip">
         <div class="planet-front"></div>
@@ -2212,11 +2212,7 @@ async function registerSW() {
   }
 }
 
-async function requestNotification() {
-  if (!('Notification' in window) && !('serviceWorker' in navigator)) {
-    alert('你的浏览器不支持通知。\n\n✅ 解决方法：在 Safari 打开此页面 → 点底部「分享」→「添加到主屏幕」→ 从桌面图标打开 → 再点🔔即可开启。');
-    return;
-  }
+async 
 
   // iOS PWA 可能 Notification 对象存在但 permission 调用受限
   // 先尝试 Service Worker 方式
