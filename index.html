@@ -140,10 +140,18 @@ function saveMemory() {
     text: text
   });
   
+  console.log('Saving memory:', title, 'Total memories:', memories.length);
+  console.log('ghToken exists:', !!ghToken);
+  
   localStorage.setItem('memories', JSON.stringify(memories));
+  
   if (ghToken) {
+    console.log('Calling ghWrite...');
     ghWrite();
+  } else {
+    console.warn('No ghToken, skipping GitHub sync');
   }
+  
   hideAddModal();
   render();
 }
@@ -198,61 +206,75 @@ function ghWrite() {
     var b64 = reader.result.split(',')[1];
     console.log('Base64 prepared, length:', b64.length);
     
-    // 先获取最新的 SHA
-    fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json', {
-      headers: { 'Authorization': 'token ' + ghToken }
-    })
-    .then(function(r) { 
-      if (!r.ok) {
-        console.error('Failed to get SHA:', r.status, r.statusText);
-        alert('获取SHA失败: ' + r.status + ' ' + r.statusText);
-        throw new Error('获取SHA失败: ' + r.status);
-      }
-      return r.json(); 
-    })
-    .then(function(data) {
-      var sha = data.sha;
-      console.log('Got SHA:', sha);
-      
-      var payload = JSON.stringify({
-        message: 'Sync',
-        content: b64,
-        branch: 'main',
-        sha: sha
-      });
-      console.log('Payload length:', payload.length);
-      
-      return fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json', {
-        method: 'PUT',
-        headers: {
-          'Authorization': 'token ' + ghToken,
-          'Content-Type': 'application/json'
-        },
-        body: payload
-      });
-    })
-    .then(function(r) { 
-      console.log('Write response status:', r.status, r.statusText);
-      if (!r.ok) {
-        return r.text().then(function(text) {
-          console.error('Write failed:', text);
-          alert('写入失败: ' + r.status + ' - ' + text);
-          throw new Error('写入失败: ' + r.status);
-        });
-      }
-      return r.json(); 
-    })
-    .then(function() {
-      console.log('Write success');
-    })
-    .catch(function(e) {
-      console.error('Write error:', e);
-      if (!e.message.includes('写入失败')) {
-        alert('同步失败: ' + e.message);
-      }
-    });
+    // 尝试写入，最多重试3次
+    attemptWrite(b64, 0);
   };
   reader.readAsDataURL(blob);
+}
+
+function attemptWrite(b64, retryCount) {
+  if (retryCount >= 3) {
+    alert('同步失败: 重试次数过多，请稍后再试');
+    return;
+  }
+  
+  // 获取最新的 SHA
+  fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json', {
+    headers: { 'Authorization': 'token ' + ghToken }
+  })
+  .then(function(r) { 
+    if (!r.ok) {
+      throw new Error('获取SHA失败: ' + r.status);
+    }
+    return r.json(); 
+  })
+  .then(function(data) {
+    var sha = data.sha;
+    console.log('Got SHA:', sha, '(retry:', retryCount, ')');
+    
+    var payload = JSON.stringify({
+      message: 'Sync',
+      content: b64,
+      branch: 'main',
+      sha: sha
+    });
+    
+    return fetch('https://api.github.com/repos/richsun511-tech/our-planet/contents/data.json', {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'token ' + ghToken,
+        'Content-Type': 'application/json'
+      },
+      body: payload
+    });
+  })
+  .then(function(r) { 
+    if (r.status === 409) {
+      // SHA 冲突，重试
+      console.warn('SHA conflict, retrying... (' + (retryCount + 1) + '/3)');
+      setTimeout(function() {
+        attemptWrite(b64, retryCount + 1);
+      }, 500);
+      return;
+    }
+    
+    if (!r.ok) {
+      return r.text().then(function(errText) {
+        throw new Error('写入失败: ' + r.status + ' - ' + errText);
+      });
+    }
+    return r.json(); 
+  })
+  .then(function(result) {
+    if (result) {
+      console.log('Write success');
+      alert('同步成功! 数据已保存到 GitHub');
+    }
+  })
+  .catch(function(e) {
+    console.error('Write error:', e);
+    alert('同步失败: ' + e.message);
+  });
 }
 
 function loadMemories() {
