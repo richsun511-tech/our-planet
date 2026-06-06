@@ -1240,68 +1240,7 @@ function sanitizeData(arr) {
   });
 }
 
-function ghWrite(data) {
-  var str = JSON.stringify(data);
-  // Use TextEncoder for proper UTF-8 conversion
-  var encoder = new TextEncoder();
-  var utf8Bytes = encoder.encode(str);
-  // Convert to base64 manually
-  var binary = '';
-  for (var i = 0; i < utf8Bytes.length; i++) {
-    binary += String.fromCharCode(utf8Bytes[i]);
-  }
-  var b64 = btoa(binary);
-  
-  var body = {
-    message: 'Sync',
-    content: b64,
-    branch: 'main'
-  };
-  if (ghSha) body.sha = ghSha;
-  
-  return fetch(GHA, {
-    method: 'PUT',
-    headers: {
-      Authorization: 'token ' + syncConfig.password,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(body)
-  })
-  .then(function(resp) {
-    if (!resp.ok) throw new Error('ghWrite: ' + resp.status);
-    return resp.json();
-  })
-  .then(function(json) {
-    ghSha = json.content.sha;
-  })
-  .catch(function(e) {
-    console.warn('ghWrite error:', e);
-  });
-}function ghRead() {
-  return fetch(GHA, { headers: { Authorization: 'token ' + syncConfig.password } })
-    .then(function(resp) {
-      if (resp.status === 404) return null;
-      if (!resp.ok) throw new Error('ghRead: ' + resp.status);
-      return resp.json();
-    })
-    .then(function(json) {
-      if (!json || !json.content) return null;
-      ghSha = json.sha;
-      var raw = atob(json.content.replace(/\s/g, ''));
-      // Convert binary string back to UTF-8 bytes
-      var bytes = new Uint8Array(raw.length);
-      for (var i = 0; i < raw.length; i++) {
-        bytes[i] = raw.charCodeAt(i);
-      }
-      var decoder = new TextDecoder('utf-8');
-      var str = decoder.decode(bytes);
-      return JSON.parse(str);
-    })
-    .catch(function(e) {
-      console.warn('ghRead error:', e);
-      return null;
-    });
-}function generateId() {
+function ghWrite(data){var jsonStr=JSON.stringify(data);var blob=new Blob([jsonStr],{type:"text/plain;charset=UTF-8"});var reader=new FileReader();reader.onload=function(){var b64=reader.result.split(",")[1];fetch(GHA,{headers:{"Authorization":"token "+syncCfg.password}}).then(function(r){if(!r.ok)throw new Error("SHA: "+r.status);return r.json()}).then(function(data){return fetch(GHA,{method:"PUT",headers:{"Authorization":"token "+syncCfg.password,"Content-Type":"application/json"},body:JSON.stringify({message:"Sync",content:b64,branch:"main",sha:data.sha})})}).then(function(r){if(!r.ok)return r.text().then(function(t){throw new Error(t)});return r.json()}).then(function(){console.log("Write success")}).catch(function(e){console.error("Write error:",e);alert("鍚屾澶辫触: "+e.message)})};reader.readAsDataURL(blob)}function ghRead(){return fetch(GHA,{headers:{"Authorization":"token "+syncCfg.password}}).then(function(r){if(r.status===404)return null;if(!r.ok)throw new Error(r.status);return r.json()}).then(function(j){if(!j)return null;ghSha=j.sha;var binary=atob(j.content.replace(/\s/g,""));var bytes=[];for(var i=0;i<binary.length;i++){bytes.push(binary.charCodeAt(i))}var decoder=new TextDecoder("utf-8");var text=decoder.decode(new Uint8Array(bytes));return JSON.parse(text)}).catch(function(){return null})}function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
 }
 
