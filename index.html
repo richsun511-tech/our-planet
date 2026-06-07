@@ -1208,8 +1208,8 @@ let photoInputEl = null;
 
 async function loadMemories() {
   // 检查数据版本，版本不匹配则清除旧数据
-  const localVersion = localStorage.getItem(DATA_VERSION_KEY);
-  if (!localVersion || parseInt(localVersion) < DATA_VERSION) {
+  const localVersion = parseInt(localStorage.getItem(DATA_VERSION_KEY)) || 0;
+  if (localVersion < DATA_VERSION) {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.setItem(DATA_VERSION_KEY, DATA_VERSION);
     console.log('数据版本已更新至 V' + DATA_VERSION + '，旧数据已清除');
