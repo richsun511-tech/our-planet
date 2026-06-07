@@ -170,6 +170,17 @@ body {
   background: radial-gradient(circle at 35% 35%, #ff8aaf 0%, #ff6b9d 20%, #c0392b 60%, #5a1033 90%, #0a0a1a 100%);
   box-shadow: 0 0 60px rgba(255,107,157,0.4), 0 0 120px rgba(255,107,157,0.15);
 }
+/* 星球自转 */
+@keyframes planet-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.planet-spin-layer {
+  position: absolute; width: 100%; height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, rgba(255,255,255,0.15) 0%, transparent 50%);
+  animation: planet-spin 20s linear infinite;
+}
 .planet-back {
   transform: rotateY(180deg);
   overflow: hidden;
@@ -208,6 +219,71 @@ body {
   border: 1px solid rgba(255,154,86,0.2);
   border-radius: 50%;
   transform: translate(-50%, -50%);
+}
+
+/* 金色粒子 */
+.gold-particle {
+  position: absolute;
+  width: 3px; height: 3px;
+  background: #ffdd57;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: particle-orbit 3s linear infinite;
+  box-shadow: 0 0 4px #ffdd57;
+}
+@keyframes particle-orbit {
+  0% { transform: rotate(0deg) translateX(80px) rotate(0deg); opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { transform: rotate(360deg) translateX(80px) rotate(-360deg); opacity: 0.3; }
+}
+.gold-particle.scatter {
+  animation: particle-scatter 0.8s ease-out forwards;
+}
+@keyframes particle-scatter {
+  0% { transform: rotate(var(--angle)) translateX(80px); opacity: 1; }
+  100% { transform: rotate(var(--angle)) translateX(180px); opacity: 0; }
+}
+.gold-particle.gather {
+  animation: particle-gather 0.6s ease-in forwards;
+}
+@keyframes particle-gather {
+  0% { transform: rotate(var(--angle)) translateX(180px); opacity: 0; }
+  100% { transform: rotate(var(--angle)) translateX(80px); opacity: 1; }
+}
+
+/* 季节特效 */
+.star.snowflake {
+  background: white !important;
+  box-shadow: 0 0 3px rgba(255,255,255,0.5);
+  animation: snowfall 6s linear infinite;
+  animation-delay: var(--delay);
+}
+@keyframes snowfall {
+  0% { transform: translateY(-10px); }
+  100% { transform: translateY(100vh); }
+}
+.star.petal {
+  border-radius: 2px;
+  animation: petal-fall 8s ease-in infinite;
+  animation-delay: var(--delay);
+}
+@keyframes petal-fall {
+  0% { transform: translateY(-10px) rotate(0deg) translateX(0); opacity: 0.3; }
+  50% { transform: translateY(50vh) rotate(180deg) translateX(30px); opacity: 0.6; }
+  100% { transform: translateY(100vh) rotate(360deg) translateX(-20px); opacity: 0; }
+}
+.star.firefly {
+  background: #aaff44 !important;
+  box-shadow: 0 0 6px #aaff44, 0 0 12px #aaff44;
+  animation: firefly-float var(--dur) ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+@keyframes firefly-float {
+  0% { transform: translate(0, 0); opacity: 0.2; }
+  25% { transform: translate(20px, -30px); opacity: 0.8; }
+  50% { transform: translate(-15px, -60px); opacity: 0.3; }
+  75% { transform: translate(25px, -40px); opacity: 0.7; }
+  100% { transform: translate(0, 0); opacity: 0.2; }
 }
 @keyframes planet-float {
   0%, 100% { transform: translateY(0); }
@@ -758,7 +834,9 @@ body {
     <button class="notify-btn" id="notifyBtn" onclick="requestNotification()" title="开启消息提醒">🔔</button>
     <div class="planet" onclick="togglePlanetFlip()" title="点击翻转">
       <div class="planet-flip" id="planetFlip">
-        <div class="planet-front"></div>
+        <div class="planet-front">
+          <div class="planet-spin-layer"></div>
+        </div>
         <div class="planet-back" id="planetBack">
           <span class="no-avatar">📷</span>
         </div>
@@ -2029,7 +2107,14 @@ function openDetail(id) {
 // ===================== 星星背景 =====================
 function initStars() {
   const container = document.getElementById('stars');
-  const count = 80;
+  const month = new Date().getMonth(); // 0=Jan ... 11=Dec
+  var seasonClass = '';
+  var count = 60;
+  if (month >= 2 && month <= 4) { seasonClass = 'petal'; count = 40; }        // 春天花瓣
+  else if (month >= 5 && month <= 7) { seasonClass = 'firefly'; count = 25; } // 夏天萤火虫
+  else if (month >= 8 && month <= 10) { count = 50; }                          // 秋天普通星星
+  else { seasonClass = 'snowflake'; count = 50; }                               // 冬天雪花
+
   let html = '';
   for (let i = 0; i < count; i++) {
     const size = Math.random() * 2.5 + 1;
@@ -2037,11 +2122,12 @@ function initStars() {
     const y = Math.random() * 100;
     const dur = Math.random() * 3 + 2;
     const delay = Math.random() * 5;
-    html += `<div class="star" style="
-      width:${size}px;height:${size}px;
-      left:${x}%;top:${y}%;
-      --dur:${dur}s;--delay:${delay}s;
-    "></div>`;
+    var extraClass = seasonClass;
+    html += '<div class="star ' + extraClass + '" style="';
+    html += 'width:' + size + 'px;height:' + size + 'px;';
+    html += 'left:' + x + '%;top:' + y + '%;';
+    html += '--dur:' + dur + 's;--delay:' + delay + 's;';
+    html += '"></div>';
   }
   container.innerHTML = html;
 }
@@ -2574,6 +2660,32 @@ function animateCountUp(el, target, duration) {
   requestAnimationFrame(step);
 }
 
+// ===================== 金色粒子 =====================
+function initGoldParticles() {
+  var planet = document.querySelector('.planet');
+  if (!planet) return;
+  for (var i = 0; i < 12; i++) {
+    var p = document.createElement('div');
+    p.className = 'gold-particle';
+    p.style.cssText = 'top:50%;left:50%;margin-left:-1.5px;margin-top:-1.5px;animation-delay:' + (i * 0.25) + 's;';
+    planet.appendChild(p);
+  }
+  // 点击星球时粒子散开再聚合
+  planet.addEventListener('click', function() {
+    var particles = planet.querySelectorAll('.gold-particle');
+    particles.forEach(function(el, idx) {
+      el.style.setProperty('--angle', (idx * 30) + 'deg');
+      el.classList.remove('gather');
+      el.classList.add('scatter');
+      setTimeout(function() {
+        el.classList.remove('scatter');
+        el.classList.add('gather');
+        setTimeout(function() { el.classList.remove('gather'); }, 600);
+      }, 800);
+    });
+  });
+}
+
 function init() {
   initStars();
   loadSyncConfig();
@@ -2590,6 +2702,8 @@ function init() {
   if (subtitle) {
     typeWriter(subtitle, '每一颗果实，都是我们的回忆', 80);
   }
+  // 金色粒子
+  initGoldParticles();
   // 注册 Service Worker
   registerSW();
 
