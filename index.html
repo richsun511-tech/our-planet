@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -1151,7 +1151,7 @@ async function githubWrite(data) {
 
 // 合并数据：以时间戳为准，保留最新版本
 function mergeData(localData, remoteData) {
-  if (!remoteData || remoteData.length === 0) return localData;
+  if (remoteData === null) return localData;
   if (!localData || localData.length === 0) return remoteData;
 
   const merged = new Map();
