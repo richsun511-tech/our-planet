@@ -1236,12 +1236,26 @@ async function loadMemories() {
   }
   // 强制执行乱码扫描清理
   scanAndCleanAll();
+  // 从云端同步头像
+  loadAvatarFromRemote().then(function(remoteData) {
+    if (remoteData) {
+      try {
+        var avatarObj = JSON.parse(remoteData);
+        if (avatarObj.avatar) {
+          saveAvatar(avatarObj.avatar);
+        }
+      } catch(e) {}
+    }
+  });
 }
 
 async function saveMemories() { memories = sanitizeData(memories);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(memories));
   if (syncConfig.enabled) {
     pushToRemote().catch(e => console.warn('推送到云端失败:', e.message));
+    // 同时同步头像
+    var avatar = loadAvatar();
+    if (avatar) saveAvatarToRemote(avatar);
   }
 }
 
@@ -2501,18 +2515,6 @@ function init() {
     updateNotifyBtn();
     setupNotificationTimer();
   });
-  // 从云端同步头像
-  loadAvatarFromRemote().then(function(remoteData) {
-    if (remoteData) {
-      try {
-        var avatarObj = JSON.parse(remoteData);
-        if (avatarObj.avatar) {
-          saveAvatar(avatarObj.avatar);
-        }
-      } catch(e) {}
-    }
-  });
-
   // 注册 Service Worker
   registerSW();
 
