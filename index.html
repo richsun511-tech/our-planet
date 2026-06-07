@@ -221,36 +221,21 @@ body {
   transform: translate(-50%, -50%);
 }
 
-/* 金色粒子 */
-.gold-particle {
+/* 呼吸光晕 */
+.planet-glow {
   position: absolute;
-  width: 3px; height: 3px;
-  background: #ffdd57;
+  top: 50%; left: 50%;
+  width: 140px; height: 140px;
+  margin-left: -70px; margin-top: -70px;
   border-radius: 50%;
   pointer-events: none;
-  animation: particle-orbit 8s linear infinite;
-  box-shadow: 0 0 4px #ffdd57;
+  z-index: -1;
+  box-shadow: 0 0 30px rgba(255,107,157,0.3), 0 0 60px rgba(255,154,86,0.15);
+  animation: breathe 3s ease-in-out infinite;
 }
-@keyframes particle-orbit {
-  0% { transform: rotate(0deg) translateX(80px) rotate(0deg); opacity: 0.2; }
-  25% { opacity: 0.6; }
-  50% { opacity: 1; }
-  75% { opacity: 0.6; }
-  100% { transform: rotate(360deg) translateX(80px) rotate(-360deg); opacity: 0.2; }
-}
-.gold-particle.scatter {
-  animation: particle-scatter 0.8s ease-out forwards;
-}
-@keyframes particle-scatter {
-  0% { transform: rotate(var(--angle)) translateX(80px); opacity: 1; }
-  100% { transform: rotate(var(--angle)) translateX(180px); opacity: 0; }
-}
-.gold-particle.gather {
-  animation: particle-gather 0.6s ease-in forwards;
-}
-@keyframes particle-gather {
-  0% { transform: rotate(var(--angle)) translateX(180px); opacity: 0; }
-  100% { transform: rotate(var(--angle)) translateX(80px); opacity: 1; }
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.25); opacity: 1; }
 }
 
 /* 季节特效 */
@@ -835,6 +820,7 @@ body {
     <button class="calendar-btn" onclick="syncToCalendar()" title="同步到苹果日历">📅</button>
     <button class="notify-btn" id="notifyBtn" onclick="requestNotification()" title="开启消息提醒">🔔</button>
     <div class="planet" onclick="togglePlanetFlip()" title="点击翻转">
+      <div class="planet-glow"></div>
       <div class="planet-flip" id="planetFlip">
         <div class="planet-front">
           <div class="planet-spin-layer"></div>
@@ -2739,8 +2725,6 @@ function init() {
   if (subtitle) {
     typeWriter(subtitle, '每一颗果实，都是我们的回忆', 80);
   }
-  // 金色粒子
-  initGoldParticles();
   // 注册 Service Worker
   registerSW();
 
