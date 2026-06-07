@@ -227,7 +227,25 @@ body {
 }
 .planet-subtitle {
   font-size: 13px; color: var(--text2);
-  margin-top: 4px;
+  margin-top: 4px; min-height: 20px;
+}
+.planet-subtitle .cursor {
+  display: inline-block; width: 2px; height: 14px;
+  background: var(--accent);
+  margin-left: 2px; vertical-align: middle;
+  animation: blink 0.8s infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; } 50% { opacity: 0; }
+}
+
+/* 翻牌计数动画 */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.8); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.countdown-days.animate {
+  animation: countUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 /* === 倒计时卡片 === */
@@ -749,7 +767,7 @@ body {
       <div class="planet-avatar-hint" id="avatarHint">点击星球设置头像</div>
     </div>
     <div class="planet-title">我们的星球</div>
-    <div class="planet-subtitle">每一颗果实，都是我们的回忆</div>
+    <div class="planet-subtitle" id="planetSubtitle"></div>
     <div class="sync-status" id="syncStatus"></div>
   </div>
 
@@ -1473,9 +1491,9 @@ function renderCountdown() {
   }
 
   if (anni.isToday) {
-    card.innerHTML = '\n      <div class="countdown-label">🎉 今天就是' + badgeHtml + '</div>\n      <div class="countdown-days">今天!</div>\n      <div class="countdown-title">' + escapeHtml(anni.title) + '</div>\n      <div class="countdown-date">' + anni.date.year + '年' + anni.date.month + '月' + anni.date.day + '日</div>\n      ' + sinceDays + '\n    ';
+    card.innerHTML = '\n      <div class="countdown-label">🎉 今天就是' + badgeHtml + '</div>\n      <div class="countdown-days" id="countdownDays">今天!</div>\n      <div class="countdown-title">' + escapeHtml(anni.title) + '</div>\n      <div class="countdown-date">' + anni.date.year + '年' + anni.date.month + '月' + anni.date.day + '日</div>\n      ' + sinceDays + '\n    ';
   } else {
-    card.innerHTML = '\n      <div class="countdown-label">' + labelPrefix + badgeHtml + '</div>\n      <div class="countdown-days">' + anni.days + '<span>天</span></div>\n      <div class="countdown-title">' + escapeHtml(anni.title) + '</div>\n      <div class="countdown-date">' + anni.date.year + '年' + anni.date.month + '月' + anni.date.day + '日</div>\n      ' + sinceDays + '\n    ';
+    card.innerHTML = '\n      <div class="countdown-label">' + labelPrefix + badgeHtml + '</div>\n      <div class="countdown-days" id="countdownDays"><span>天</span></div>\n      <div class="countdown-title">' + escapeHtml(anni.title) + '</div>\n      <div class="countdown-date">' + anni.date.year + '年' + anni.date.month + '月' + anni.date.day + '日</div>\n      ' + sinceDays + '\n    ';
   }
 
   // 如果手动选择状态，点击卡片恢复自动
@@ -1486,6 +1504,13 @@ function renderCountdown() {
     };
   } else {
     card.onclick = null;
+  }
+  // 触发翻牌计数动画
+  if (!anni.isToday) {
+    var daysEl = document.getElementById('countdownDays');
+    if (daysEl && anni.days > 0) {
+      animateCountUp(daysEl, anni.days, 1200);
+    }
   }
 }
 
@@ -2509,6 +2534,46 @@ function executeClearAll() {
   setTimeout(function() { toast.style.opacity = '0'; setTimeout(function() { toast.remove(); }, 300); }, 1500);
 }
 
+// ===================== 打字机效果 =====================
+function typeWriter(el, text, speed, callback) {
+  var i = 0;
+  el.innerHTML = '';
+  function type() {
+    if (i < text.length) {
+      el.innerHTML = text.substring(0, i + 1) + '<span class=\"cursor\"></span>';
+      i++;
+      setTimeout(type, speed);
+    } else {
+      el.innerHTML = text;
+      if (callback) callback();
+    }
+  }
+  type();
+}
+
+// ===================== 翻牌计数动画 =====================
+function animateCountUp(el, target, duration) {
+  var start = 0;
+  var startTime = null;
+  function step(timestamp) {
+    if (!startTime) startTime = timestamp;
+    var progress = Math.min((timestamp - startTime) / duration, 1);
+    // easeOutExpo
+    var eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+    var current = Math.floor(eased * target);
+    el.textContent = current;
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    } else {
+      el.textContent = target;
+      el.classList.add('animate');
+    }
+  }
+  el.textContent = '0';
+  el.classList.remove('animate');
+  requestAnimationFrame(step);
+}
+
 function init() {
   initStars();
   loadSyncConfig();
@@ -2520,6 +2585,11 @@ function init() {
     updateNotifyBtn();
     setupNotificationTimer();
   });
+  // 打字机效果
+  var subtitle = document.getElementById('planetSubtitle');
+  if (subtitle) {
+    typeWriter(subtitle, '每一颗果实，都是我们的回忆', 80);
+  }
   // 注册 Service Worker
   registerSW();
 
