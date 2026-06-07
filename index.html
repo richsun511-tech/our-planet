@@ -1080,7 +1080,7 @@ function lunarToSolar(lunarYear, lunarMonth, lunarDay, isLeap) {
 // ===================== 数据管理 =====================
 const STORAGE_KEY = 'our_planet_memories';
 const DATA_VERSION_KEY = 'our_planet_data_version';
-const DATA_VERSION = 5; // 递增此版本号可强制清除旧设备上的脏数据
+const DATA_VERSION = 6; // 递增此版本号可强制清除旧设备上的脏数据
 const AVATAR_KEY = 'our_planet_avatar';
 const SYNC_CONFIG_KEY = 'our_planet_sync_config';
 
@@ -1234,6 +1234,8 @@ async function loadMemories() {
       console.warn('同步失败，使用本地数据:', e.message);
     }
   }
+  // 强制执行乱码扫描清理
+  scanAndCleanAll();
 }
 
 async function saveMemories() { memories = sanitizeData(memories);
@@ -1248,9 +1250,35 @@ function sanitizeData(arr) {
   if (!arr || !arr.length) return [];
   return arr.filter(function(m) {
     if (!m || !m.title || m.title.length < 1) return false;
+    // 检测U+FFFD替换字符（标准乱码标志）
     if (m.title.indexOf('\uFFFD') >= 0) return false;
+    // 检测含控制字符（C0/C1控制区）
+    if (/[\x00-\x08\x0B\x0C\x0E-\x1F]/.test(m.title)) return false;
+    // 检测常见的多重UTF-8编码乱码模式：连续出现Ã、Â、¥、§等西欧字符块
+    if (/[\u00C0-\u00FF]{3,}/.test(m.title)) return false;
+    // 检测text字段（如果存在）
+    if (m.text && /[\u00C0-\u00FF]{3,}/.test(m.text)) return false;
     return true;
   });
+}
+
+// 全量乱码扫描与清理（页面加载时强制执行）
+function scanAndCleanAll() {
+  var dirty = false;
+  for (var i = memories.length - 1; i >= 0; i--) {
+    var m = memories[i];
+    if (!m || !m.title) { memories.splice(i, 1); dirty = true; continue; }
+    if (m.title.indexOf('\uFFFD') >= 0 ||
+        /[\x00-\x08\x0B\x0C\x0E-\x1F]/.test(m.title) ||
+        /[\u00C0-\u00FF]{3,}/.test(m.title)) {
+      memories.splice(i, 1);
+      dirty = true;
+    }
+  }
+  if (dirty) {
+    saveMemories();
+    console.log('Cleaned garbled records');
+  }
 }
 
 
