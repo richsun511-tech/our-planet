@@ -2078,6 +2078,52 @@ function togglePlanetFlip() {
   }
 }
 
+const GH_AVATAR_API = 'https://api.github.com/repos/' + GH_REPO + '/contents/avatar.json';
+let ghAvatarSha = null;
+
+async function loadAvatarFromRemote() {
+  if (!syncConfig.enabled) return null;
+  try {
+    const resp = await fetch(GH_AVATAR_API, {
+      headers: { 'Authorization': 'token ' + syncConfig.password }
+    });
+    if (resp.status === 404) return null;
+    if (!resp.ok) return null;
+    const json = await resp.json();
+    ghAvatarSha = json.sha;
+    const content = atob(json.content.replace(/\s/g, ''));
+    // UTF-8 decode
+    const bytes = new Uint8Array(content.length);
+    for (let i = 0; i < content.length; i++) bytes[i] = content.charCodeAt(i);
+    return new TextDecoder('utf-8').decode(bytes);
+  } catch(e) { return null; }
+}
+
+async function saveAvatarToRemote(dataUrl) {
+  if (!syncConfig.enabled) return;
+  try {
+    const jsonStr = JSON.stringify({ avatar: dataUrl });
+    const body = {
+      message: 'Sync avatar',
+      content: btoa(unescape(encodeURIComponent(jsonStr))),
+      branch: 'main'
+    };
+    if (ghAvatarSha) body.sha = ghAvatarSha;
+    const resp = await fetch(GH_AVATAR_API, {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'token ' + syncConfig.password,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+    if (resp.ok) {
+      const json = await resp.json();
+      ghAvatarSha = json.content.sha;
+    }
+  } catch(e) { console.warn('Avatar sync failed:', e); }
+}
+
 function loadAvatar() {
   try {
     const data = localStorage.getItem(AVATAR_KEY);
@@ -2088,6 +2134,7 @@ function loadAvatar() {
 function saveAvatar(dataUrl) {
   localStorage.setItem(AVATAR_KEY, dataUrl);
   applyAvatar(dataUrl);
+  saveAvatarToRemote(dataUrl);
 }
 
 function applyAvatar(dataUrl) {
@@ -2416,6 +2463,17 @@ function init() {
     updateSyncStatusUI();
     updateNotifyBtn();
     setupNotificationTimer();
+  });
+  // 从云端同步头像
+  loadAvatarFromRemote().then(function(remoteData) {
+    if (remoteData) {
+      try {
+        var avatarObj = JSON.parse(remoteData);
+        if (avatarObj.avatar) {
+          saveAvatar(avatarObj.avatar);
+        }
+      } catch(e) {}
+    }
   });
 
   // 注册 Service Worker
