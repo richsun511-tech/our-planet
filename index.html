@@ -1575,7 +1575,7 @@ function renderCountdown() {
   const badgeHtml = isManual ? '<span class="countdown-badge">已选择</span>' : '';
   const labelPrefix = isManual
     ? '<span>📌 ' + escapeHtml(anni.title) + '</span><span class="reset-hint">· 点击恢复自动</span>'
-    : '⏳ 下一个纪念日';
+    : '⏳ 下一个纪念日倒计时';
 
   // 纪念日天数
   let sinceDays = '';
@@ -2674,11 +2674,11 @@ function animateCountUp(el, target, duration) {
     // easeOutExpo
     var eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
     var current = Math.floor(eased * target);
-    el.textContent = current;
+    el.innerHTML = current + ' ';
     if (progress < 1) {
       requestAnimationFrame(step);
     } else {
-      el.textContent = target;
+      el.innerHTML = target + ' 天';
       el.classList.add('animate');
     }
   }
