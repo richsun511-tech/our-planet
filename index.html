@@ -2695,7 +2695,9 @@ function initGoldParticles() {
 
 // ===================== 触觉反馈 =====================
 function vibrate(pattern) {
-  if (navigator.vibrate) { navigator.vibrate(pattern); }
+  try {
+    if (navigator.vibrate) { navigator.vibrate(pattern); }
+  } catch(e) {}
 }
 
 // ===================== 音效（Web Audio API，无需音频文件） =====================
