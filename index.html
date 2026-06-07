@@ -1245,7 +1245,18 @@ function mergeData(localData, remoteData) {
       merged.set(item.id, item);
     }
   }
-  return Array.from(merged.values());
+  var result = Array.from(merged.values());
+  // 去重：相同日期+相同标题的纪念日只保留一条（最新的）
+  var deduped = [];
+  var seen = new Set();
+  for (var i = result.length - 1; i >= 0; i--) {
+    var key = result[i].date + '|' + result[i].title;
+    if (!seen.has(key)) {
+      seen.add(key);
+      deduped.unshift(result[i]);
+    }
+  }
+  return deduped;
 }
 
 // 完整同步流程
@@ -1267,12 +1278,35 @@ async function syncMemories() {
 // 仅推送
 async function pushToRemote() {
   if (!syncConfig.enabled) return;
-  try {
-    await githubWrite(memories);
-    syncConfig.lastSync = Date.now();
-    saveSyncConfig();
-    return true;
-  } catch(e) { console.warn(e); return false; }
+  var retries = 3;
+  while (retries > 0) {
+    try {
+      await githubWrite(memories);
+      syncConfig.lastSync = Date.now();
+      saveSyncConfig();
+      return true;
+    } catch(e) {
+      retries--;
+      if (retries > 0) {
+        // 409 冲突时重新获取 SHA 再试
+        if (e.message && e.message.indexOf('409') >= 0) {
+          try {
+            var resp = await fetch(GH_API, {
+              headers: { 'Authorization': 'token ' + syncConfig.password }
+            });
+            if (resp.ok) {
+              var json = await resp.json();
+              ghSha = json.sha;
+            }
+          } catch(e2) {}
+        }
+        await new Promise(function(r) { setTimeout(r, 500); });
+      } else {
+        console.warn('pushToRemote failed after retries:', e.message);
+        return false;
+      }
+    }
+  }
 }
 
 let memories = [];
