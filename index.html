@@ -225,17 +225,17 @@ body {
 .planet-glow {
   position: absolute;
   top: 50%; left: 50%;
-  width: 140px; height: 140px;
-  margin-left: -70px; margin-top: -70px;
+  width: 130px; height: 130px;
+  margin-left: -65px; margin-top: -65px;
   border-radius: 50%;
   pointer-events: none;
   z-index: -1;
-  box-shadow: 0 0 30px rgba(255,107,157,0.3), 0 0 60px rgba(255,154,86,0.15);
-  animation: breathe 3s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(255,138,175,0.25), 0 0 40px rgba(255,154,86,0.1);
+  animation: breathe 4s ease-in-out infinite;
 }
 @keyframes breathe {
-  0%, 100% { transform: scale(1); opacity: 0.6; }
-  50% { transform: scale(1.25); opacity: 1; }
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.15); opacity: 0.5; }
 }
 
 /* 季节特效 */
