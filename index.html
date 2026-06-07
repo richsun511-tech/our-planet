@@ -1123,8 +1123,12 @@ async function githubRead() {
     if (!resp.ok) throw new Error('GitHub read: ' + resp.status);
     const json = await resp.json();
     ghSha = json.sha;
-    const content = atob(json.content.replace(/\s/g, ''));
-    return JSON.parse(content);
+    // UTF-8 safe decode: atob gives binary string, convert to bytes then UTF-8 decode
+    const raw = atob(json.content.replace(/\s/g, ''));
+    const bytes = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+    const str = new TextDecoder('utf-8').decode(bytes);
+    return JSON.parse(str);
   } catch(e) { console.warn(e); return null; }
 }
 
