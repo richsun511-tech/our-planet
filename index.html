@@ -1975,6 +1975,8 @@ function saveMemory() {
   saveMemories();
   closeAddModal();
   renderAll();
+  vibrate(50);
+  playDing();
 }
 
 function deleteMemory() {
@@ -2020,6 +2022,7 @@ function executeDelete() {
   saveMemories();
   closeAddModal();
   renderAll();
+  vibrate([100, 50, 200]);
 
   // 轻提示
   var toast = document.createElement('div');
@@ -2059,6 +2062,7 @@ function confirmDelete(memId, memTitle) {
     if (selectedMemoryId === memId) selectedMemoryId = null;
     saveMemories();
     renderAll();
+    vibrate([100, 50, 200]);
     // 轻提示
     var toast = document.createElement('div');
     toast.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;z-index:500;transition:opacity 0.3s;pointer-events:none;';
@@ -2614,6 +2618,7 @@ function executeClearAll() {
   // 保存并同步
   saveMemories();
   renderAll();
+  vibrate([100, 50, 100, 50, 300]);
   // 轻提示
   var toast = document.createElement('div');
   toast.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;z-index:500;transition:opacity 0.3s;pointer-events:none;';
@@ -2686,6 +2691,29 @@ function initGoldParticles() {
       }, 800);
     });
   });
+}
+
+// ===================== 触觉反馈 =====================
+function vibrate(pattern) {
+  if (navigator.vibrate) { navigator.vibrate(pattern); }
+}
+
+// ===================== 音效（Web Audio API，无需音频文件） =====================
+function playDing() {
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1200, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1800, ctx.currentTime + 0.08);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.3);
+  } catch(e) {}
 }
 
 function init() {
