@@ -1530,7 +1530,7 @@ function renderTimeline() {
   }
 
   // 按日期降序（最近的在前）
-  filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+  filtered.sort((a, b) => { const da = getNextAnniversary(a).days; const db = getNextAnniversary(b).days; return da - db; });
 
   if (filtered.length === 0) {
     tl.innerHTML = '';
@@ -2413,42 +2413,47 @@ function scheduleNotifications() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // 检查今天是否已经通知过（避免重复弹窗）
+  const lastNotifyDate = localStorage.getItem('our_planet_last_notify');
+  const todayStr = today.getFullYear() + '-' + (today.getMonth()+1) + '-' + today.getDate();
+  if (lastNotifyDate === todayStr) return; // 今天已通知过
+  localStorage.setItem('our_planet_last_notify', todayStr);
+
+  var notified = 0;
   for (const mem of memories) {
     const anni = getNextAnniversary(mem);
     if (anni.days === 0) {
-      // 今天就是纪念日
       const title = mem.calType === 'lunar'
         ? '🎉 今天' + mem.lunarDisplay + ' ' + mem.title
         : '🎉 纪念日: ' + mem.title;
-
-      const options = {
-        body: (mem.text || '今天是你们的纪念日！') + (mem.calType === 'lunar' ? '\n阴历: ' + mem.lunarDisplay : ''),
+      swRegistration.showNotification(title, {
+        body: (mem.text || '今天是你们的纪念日！'),
         icon: '/icon.png',
         badge: '/icon.png',
         tag: mem.id,
         data: { url: window.location.href }
-      };
-
-      swRegistration.showNotification(title, options)
-        .catch(e => console.warn('通知失败:', e));
+      }).catch(e => console.warn(e));
+      notified++;
     } else if (anni.days === 1) {
-      // 明天
       swRegistration.showNotification('⏰ 明天就是 ' + mem.title + '！', {
         body: '还剩 1 天，准备惊喜吧 💝',
         icon: '/icon.png',
         badge: '/icon.png',
         tag: 'tmo_' + mem.id,
         data: { url: window.location.href }
-      }).catch(e => console.warn('通知失败:', e));
+      }).catch(e => console.warn(e));
+      notified++;
     }
   }
+  if (notified > 0) console.log('Sent ' + notified + ' notifications');
 }
 
 // 每天检查一次通知
 function setupNotificationTimer() {
   if (Notification.permission !== 'granted') return;
   scheduleNotifications();
-  setInterval(scheduleNotifications, 3600000); // 每小时检查
+  // 每30分钟检查一次（用日期去重，每天只通知一次）
+  setInterval(scheduleNotifications, 1800000);
 }
 
 // ===================== 清空所有记录 =====================
