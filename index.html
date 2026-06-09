@@ -956,7 +956,7 @@ body {
 <div class="modal-overlay" id="syncModal" style="display:none;" onclick="if(event.target===this)closeSyncModal()">
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
-    <div class="modal-title">☁️ 云端同步设置 <span style="color:rgba(255,255,255,0.25);font-size:14px;">V11.01</span></div>
+    <div class="modal-title">☁️ 云端同步设置 <span style="color:rgba(255,255,255,0.25);font-size:14px;">V11.02</span></div>
 
     <div style="margin-bottom:16px;padding:12px;border-radius:12px;background:rgba(87,217,163,0.1);font-size:13px;color:var(--text2);line-height:1.6;" id="syncHelp">
       💡 首次使用需输入 GitHub Token 启用同步。<br>
@@ -1241,22 +1241,24 @@ function mergeData(localData, remoteData) {
   const merged = new Map();
   for (const item of [...localData, ...remoteData]) {
     const existing = merged.get(item.id);
-    if (!existing || new Date(item.createdAt) > new Date(existing.createdAt)) {
+    if (!existing) {
       merged.set(item.id, item);
+    } else {
+      var et = new Date(existing.deletedAt||existing.updatedAt||existing.createdAt||0).getTime();
+      var it = new Date(item.deletedAt||item.updatedAt||item.createdAt||0).getTime();
+      if (it > et) { merged.set(item.id, item); }
     }
   }
-  var result = Array.from(merged.values());
-  // 去重：相同日期+相同标题的纪念日只保留一条（最新的）
-  var deduped = [];
-  var seen = new Set();
-  for (var i = result.length - 1; i >= 0; i--) {
-    var key = result[i].date + '|' + result[i].title;
-    if (!seen.has(key)) {
-      seen.add(key);
-      deduped.unshift(result[i]);
-    }
+  var arr = Array.from(merged.values());
+  var result = [];
+  var seen = {};
+  for (var i = 0; i < arr.length; i++) {
+    var ritem = arr[i];
+    if (ritem.deletedAt) continue;
+    var key = ritem.date + '|' + ritem.title;
+    if (!seen[key]) { seen[key] = true; result.push(ritem); }
   }
-  return deduped;
+  return result;
 }
 
 // 完整同步流程
@@ -1532,7 +1534,7 @@ function findNearestAnniversary() {
   let nearest = null;
   let minDays = Infinity;
 
-  for (const mem of memories) {
+  for (var i=0;i<memories.length;i++) { var mem=memories[i]; if (mem.deletedAt) continue;
     const anni = getNextAnniversary(mem);
     if (anni.days < minDays) {
       minDays = anni.days;
@@ -1546,7 +1548,7 @@ function findNearestAnniversary() {
 // ===================== 渲染 =====================
 function getTargetAnniversary() {
   if (selectedMemoryId) {
-    const mem = memories.find(m => m.id === selectedMemoryId);
+    const mem = memories.find(function(m) { return m.id === selectedMemoryId && !m.deletedAt; });
     if (mem) return getNextAnniversary(mem);
   }
   // 默认：最近的一个
@@ -1561,9 +1563,9 @@ function renderCountdown() {
   // 获取当前选中的纪念日（用于计算纪念日天数）
   let targetMem = null;
   if (selectedMemoryId) {
-    targetMem = memories.find(m => m.id === selectedMemoryId);
+    targetMem = memories.find(function(m) { return m.id === selectedMemoryId && !m.deletedAt; });
   } else if (anni.id) {
-    targetMem = memories.find(m => m.id === anni.id);
+    targetMem = memories.find(function(m) { return m.id === anni.id && !m.deletedAt; });
   }
 
   if (!anni) {
@@ -1697,12 +1699,12 @@ function renderTimeline() {
 
 function renderAll() {
   // 验证选中项仍然存在
-  if (selectedMemoryId && !memories.find(m => m.id === selectedMemoryId)) {
+  if (selectedMemoryId && !memories.find(function(m) { return m.id === selectedMemoryId && !m.deletedAt; })) {
     selectedMemoryId = null;
   }
   // 如果被筛选掉了，清除选择
   if (selectedMemoryId && currentFilter !== 'all') {
-    const mem = memories.find(m => m.id === selectedMemoryId);
+    const mem = memories.find(function(m) { return m.id === selectedMemoryId && !m.deletedAt; });
     if (mem && (!mem.tags || !mem.tags.includes(currentFilter))) {
       selectedMemoryId = null;
     }
@@ -2037,7 +2039,7 @@ function showDeleteConfirm() {
 function executeDelete() {
   if (!editingId) return;
   var deletedMem = memories.find(function(m) { return m.id === editingId; });
-  memories = memories.filter(function(m) { return m.id !== editingId; });
+  var del = memories.find(function(m) { return m.id === editingId; }); if (del) { del.deletedAt = new Date().toISOString(); del.updatedAt = new Date().toISOString(); }
   if (selectedMemoryId === editingId) selectedMemoryId = null;
   saveMemories();
   closeAddModal();
@@ -2078,7 +2080,7 @@ function confirmDelete(memId, memTitle) {
     overlay.remove();
     // 执行删除
     var deletedMem = memories.find(function(m) { return m.id === memId; });
-    memories = memories.filter(function(m) { return m.id !== memId; });
+    var del2 = memories.find(function(m) { return m.id === memId; }); if (del2) { del2.deletedAt = new Date().toISOString(); del2.updatedAt = new Date().toISOString(); }
     if (selectedMemoryId === memId) selectedMemoryId = null;
     saveMemories();
     renderAll();
@@ -2400,7 +2402,7 @@ function syncToCalendar() {
     'X-APPLE-CALENDAR-COLOR:#FF6B9D',
   ];
 
-  for (const mem of memories) {
+  for (var i=0;i<memories.length;i++) { var mem=memories[i]; if (mem.deletedAt) continue;
     const title = mem.title || '纪念日';
     const tags = (mem.tags || []).join('、');
     let desc = (mem.text || '') + (tags ? '\\n\\n标签: ' + tags : '');
@@ -2557,7 +2559,7 @@ function scheduleNotifications() {
   localStorage.setItem('our_planet_last_notify', todayStr);
 
   var notified = 0;
-  for (const mem of memories) {
+  for (var i=0;i<memories.length;i++) { var mem=memories[i]; if (mem.deletedAt) continue;
     const anni = getNextAnniversary(mem);
     if (anni.days === 0) {
       const title = mem.calType === 'lunar'
