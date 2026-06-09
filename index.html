@@ -1008,7 +1008,7 @@ body {
 <div class="modal-overlay" id="syncModal" style="display:none;" onclick="if(event.target===this)closeSyncModal()">
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
-    <div class="modal-title">☁️ 云端同步设置 <span style="color:rgba(255,255,255,0.25);font-size:14px;">V12.02</span></div>
+    <div class="modal-title">☁️ 云端同步设置 <span style="color:rgba(255,255,255,0.25);font-size:14px;">V12.03</span></div>
 
     <div style="margin-bottom:16px;padding:12px;border-radius:12px;background:rgba(87,217,163,0.1);font-size:13px;color:var(--text2);line-height:1.6;" id="syncHelp">
       💡 首次使用需输入 GitHub Token 启用同步。<br>
@@ -2318,7 +2318,12 @@ function togglePlanetFlip() {
     hint.style.opacity = '0';
     playMusic();
     startBreathingEffect();
+  } else {
+    hint.style.opacity = '1';
+    stopMusic();
+    stopBreathingEffect();
   }
+}
 
 // 音乐播放函数（带3秒渐入）
 function playMusic() {
@@ -2371,14 +2376,6 @@ function stopBreathingEffect() {
   const planet = document.querySelector('.planet');
   if (planet) {
     planet.classList.remove('breathing');
-  }
-} else {
-    hint.style.opacity = '1';
-    stopMusic();
-    stopBreathingEffect();
-  }
-} else {
-    hint.style.opacity = '1';
   }
 }
 
