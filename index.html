@@ -808,53 +808,89 @@ body {
 
 /* 音乐播放时的光环旋转和呼吸加速效果 */
 .planet.breathing {
-  animation: breathing 2s ease-in-out infinite;
+  animation: breathing 1.5s ease-in-out infinite;
 }
 
 @keyframes breathing {
   0%, 100% { 
     transform: scale(1); 
-    filter: drop-shadow(0 0 10px rgba(255, 107, 157, 0.6));
+    filter: drop-shadow(0 0 15px rgba(255, 107, 157, 0.6));
   }
   50% { 
-    transform: scale(1.05); 
-    filter: drop-shadow(0 0 20px rgba(255, 107, 157, 0.9));
+    transform: scale(1.08); 
+    filter: drop-shadow(0 0 25px rgba(255, 107, 157, 0.95));
   }
 }
 
-.planet.breathing .planet-flip {
-  animation: rotate 3s linear infinite;
+/* 光环 - 头像周围的旋转光圈 */
+.planet-ring-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 160px;
+  height: 160px;
+  margin: -80px 0 0 -80px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: rgba(255, 107, 157, 0.8);
+  border-right-color: rgba(255, 154, 86, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
 }
 
-@keyframes rotate {
-  from { transform: rotateY(0deg); }
-  to { transform: rotateY(360deg); }
+.planet.breathing .planet-ring-glow {
+  opacity: 1;
+  animation: ring-spin 2s linear infinite;
+}
+
+@keyframes ring-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 
 /* 音乐播放时的光环旋转和呼吸加速效果 */
 .planet.breathing {
-  animation: breathing 2s ease-in-out infinite;
+  animation: breathing 1.5s ease-in-out infinite;
 }
 
 @keyframes breathing {
   0%, 100% { 
     transform: scale(1); 
-    filter: drop-shadow(0 0 10px rgba(255, 107, 157, 0.6));
+    filter: drop-shadow(0 0 15px rgba(255, 107, 157, 0.6));
   }
   50% { 
-    transform: scale(1.05); 
-    filter: drop-shadow(0 0 20px rgba(255, 107, 157, 0.9));
+    transform: scale(1.08); 
+    filter: drop-shadow(0 0 25px rgba(255, 107, 157, 0.95));
   }
 }
 
-.planet.breathing .planet-flip {
-  animation: rotate 3s linear infinite;
+/* 光环 - 头像周围的旋转光圈 */
+.planet-ring-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 160px;
+  height: 160px;
+  margin: -80px 0 0 -80px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: rgba(255, 107, 157, 0.8);
+  border-right-color: rgba(255, 154, 86, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
 }
 
-@keyframes rotate {
-  from { transform: rotateY(0deg); }
-  to { transform: rotateY(360deg); }
+.planet.breathing .planet-ring-glow {
+  opacity: 1;
+  animation: ring-spin 2s linear infinite;
+}
+
+@keyframes ring-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>
 </head>
@@ -1008,7 +1044,7 @@ body {
 <div class="modal-overlay" id="syncModal" style="display:none;" onclick="if(event.target===this)closeSyncModal()">
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
-    <div class="modal-title">☁️ 云端同步设置 <span style="color:rgba(255,255,255,0.25);font-size:14px;">V12.03</span></div>
+    <div class="modal-title">☁️ 云端同步设置 <span style="color:rgba(255,255,255,0.25);font-size:14px;">V12.04</span></div>
 
     <div style="margin-bottom:16px;padding:12px;border-radius:12px;background:rgba(87,217,163,0.1);font-size:13px;color:var(--text2);line-height:1.6;" id="syncHelp">
       💡 首次使用需输入 GitHub Token 启用同步。<br>
