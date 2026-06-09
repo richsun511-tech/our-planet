@@ -830,6 +830,32 @@ body {
   from { transform: rotateY(0deg); }
   to { transform: rotateY(360deg); }
 }
+
+
+/* 音乐播放时的光环旋转和呼吸加速效果 */
+.planet.breathing {
+  animation: breathing 2s ease-in-out infinite;
+}
+
+@keyframes breathing {
+  0%, 100% { 
+    transform: scale(1); 
+    filter: drop-shadow(0 0 10px rgba(255, 107, 157, 0.6));
+  }
+  50% { 
+    transform: scale(1.05); 
+    filter: drop-shadow(0 0 20px rgba(255, 107, 157, 0.9));
+  }
+}
+
+.planet.breathing .planet-flip {
+  animation: rotate 3s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(360deg); }
+}
 </style>
 </head>
 <body>
@@ -982,7 +1008,7 @@ body {
 <div class="modal-overlay" id="syncModal" style="display:none;" onclick="if(event.target===this)closeSyncModal()">
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
-    <div class="modal-title">☁️ 云端同步设置 <span style="color:rgba(255,255,255,0.25);font-size:14px;">V12.01</span></div>
+    <div class="modal-title">☁️ 云端同步设置 <span style="color:rgba(255,255,255,0.25);font-size:14px;">V12.02</span></div>
 
     <div style="margin-bottom:16px;padding:12px;border-radius:12px;background:rgba(87,217,163,0.1);font-size:13px;color:var(--text2);line-height:1.6;" id="syncHelp">
       💡 首次使用需输入 GitHub Token 启用同步。<br>
@@ -2287,10 +2313,71 @@ function togglePlanetFlip() {
   const flip = document.getElementById('planetFlip');
   const hint = document.getElementById('avatarHint');
   flip.classList.toggle('flipped');
-  // 隐藏提示
+  // 背面播放，正面暂停
   if (flip.classList.contains('flipped')) {
     hint.style.opacity = '0';
-  } else {
+    playMusic();
+    startBreathingEffect();
+  }
+
+// 音乐播放函数（带3秒渐入）
+function playMusic() {
+  const bgm = document.getElementById('bgm');
+  if (!bgm) return;
+  
+  bgm.volume = 0;
+  bgm.play().catch(e => console.log('Audio play failed:', e));
+  
+  // 3秒渐入
+  let fadeTime = 3000;
+  let startTime = Date.now();
+  const fadeIn = setInterval(() => {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / fadeTime, 1);
+    bgm.volume = progress * 0.5; // 最大音量0.5
+    if (progress >= 1) clearInterval(fadeIn);
+  }, 50);
+}
+
+// 音乐暂停函数（带1秒渐出）
+function stopMusic() {
+  const bgm = document.getElementById('bgm');
+  if (!bgm) return;
+  
+  // 1秒渐出
+  let fadeTime = 1000;
+  let startTime = Date.now();
+  const fadeOut = setInterval(() => {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / fadeTime, 1);
+    bgm.volume = (1 - progress) * bgm.volume;
+    if (progress >= 1) {
+      bgm.pause();
+      clearInterval(fadeOut);
+    }
+  }, 50);
+}
+
+// 光环旋转效果
+function startBreathingEffect() {
+  const planet = document.querySelector('.planet');
+  if (planet) {
+    planet.classList.add('breathing');
+  }
+}
+
+// 停止光环旋转效果
+function stopBreathingEffect() {
+  const planet = document.querySelector('.planet');
+  if (planet) {
+    planet.classList.remove('breathing');
+  }
+} else {
+    hint.style.opacity = '1';
+    stopMusic();
+    stopBreathingEffect();
+  }
+} else {
     hint.style.opacity = '1';
   }
 }
