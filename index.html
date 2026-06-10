@@ -1044,7 +1044,7 @@ body {
 <div class="modal-overlay" id="syncModal" style="display:none;" onclick="if(event.target===this)closeSyncModal()">
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
-    <div class="modal-title">☁️ 云端同步设置 <span style="color:rgba(255,255,255,0.25);font-size:14px;">V12.10</span></div>
+    <div class="modal-title">☁️ 云端同步设置 <span style="color:rgba(255,255,255,0.25);font-size:14px;">V12.11</span></div>
 
     <div style="margin-bottom:16px;padding:12px;border-radius:12px;background:rgba(87,217,163,0.1);font-size:13px;color:var(--text2);line-height:1.6;" id="syncHelp">
       💡 首次使用需输入 GitHub Token 启用同步。<br>
@@ -1471,6 +1471,9 @@ async function saveMemories() { memories = sanitizeData(memories);
 function sanitizeData(arr) {
   if (!arr || !arr.length) return [];
   return arr.filter(function(m) {
+    // 保留墓碑记录（有deletedAt的记录）用于跨设备同步
+    if (m.deletedAt) return true;
+    
     if (!m || !m.title || m.title.length < 1) return false;
     // 检测U+FFFD替换字符（标准乱码标志）
     if (m.title.indexOf('\uFFFD') >= 0) return false;
