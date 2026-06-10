@@ -1337,16 +1337,8 @@ function mergeData(localData, remoteData) {
       if (it > et) { merged.set(item.id, item); }
     }
   }
-  var arr = Array.from(merged.values());
-  var result = [];
-  var seen = {};
-  for (var i = 0; i < arr.length; i++) {
-    var ritem = arr[i];
-    if (ritem.deletedAt) continue;
-    var key = ritem.date + '|' + ritem.title;
-    if (!seen[key]) { seen[key] = true; result.push(ritem); }
-  }
-  return result;
+  // 保留墓碑记录，不在这里过滤
+  return Array.from(merged.values());
 }
 
 // 完整同步流程
