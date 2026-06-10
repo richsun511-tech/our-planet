@@ -1610,6 +1610,30 @@ body {
 
 }
 
+
+/* === Music breathing effects === */
+.planet.breathing { animation: planet-breathe 2.2s ease-in-out infinite; }
+@keyframes planet-breathe {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(255,107,157,0.4)); }
+  50% { transform: scale(1.06); filter: drop-shadow(0 0 20px rgba(255,107,157,0.7)); }
+}
+.planet-ring-glow {
+  position: absolute; top: -15px; left: -15px; right: -15px; bottom: -15px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: conic-gradient(from 0deg, rgba(255,107,157,0.6), rgba(255,154,86,0.4), rgba(255,107,157,0.6), rgba(255,154,86,0.4)) border-box;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity: 0; transition: opacity 0.5s;
+}
+.planet-ring-glow.active {
+  opacity: 1;
+  animation: ring-spin 3s linear infinite;
+}
+@keyframes ring-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 </style>
 
 </head>
@@ -1644,6 +1668,7 @@ body {
 
       <div class="planet-glow"></div>
 
+      <div class="planet-ring-glow" id="planetRingGlow"></div>
       <div class="planet-flip" id="planetFlip">
 
         <div class="planet-front">
@@ -1914,7 +1939,7 @@ body {
 
     <div class="modal-handle"></div>
 
-    <div class="modal-title">☁️ 云端同步设置 <span style="color:rgba(255,255,255,0.25);font-size:14px;">V13.01</span></div>
+    <div class="modal-title">☁️ 云端同步设置 <span style="color:rgba(255,255,255,0.25);font-size:14px;">V13.02</span></div>
 
 
 
@@ -5583,10 +5608,54 @@ function init() {
 
 init();
 
+
+// ===================== Music Control =====================
+let bgmAudio = null;
+
+function playMusic() {
+  const bgm = document.getElementById('bgm');
+  if (!bgm) return;
+  bgmAudio = bgm;
+  bgm.volume = 0;
+  bgm.currentTime = 0;
+  bgm.play().catch(function(e) { console.warn('play failed:', e); });
+  let fadeTimer = setInterval(function() {
+    if (bgm.volume < 0.5) { bgm.volume = Math.min(bgm.volume + 0.05, 0.5); }
+    else { clearInterval(fadeTimer); }
+  }, 150);
+  bgm._fadeTimer = fadeTimer;
+}
+
+function stopMusic() {
+  const bgm = document.getElementById('bgm');
+  if (!bgm) return;
+  if (bgm._fadeTimer) clearInterval(bgm._fadeTimer);
+  let fadeTimer = setInterval(function() {
+    if (bgm.volume > 0.05) { bgm.volume = Math.max(bgm.volume - 0.05, 0); }
+    else { bgm.pause(); bgm.volume = 0; clearInterval(fadeTimer); }
+  }, 100);
+}
+
+function startBreathingEffect() {
+  const planet = document.querySelector('.planet');
+  if (planet) planet.classList.add('breathing');
+  const ring = document.getElementById('planetRingGlow');
+  if (ring) ring.classList.add('active');
+}
+
+function stopBreathingEffect() {
+  const planet = document.querySelector('.planet');
+  if (planet) planet.classList.remove('breathing');
+  const ring = document.getElementById('planetRingGlow');
+  if (ring) ring.classList.remove('active');
+}
+
 </script>
 
 
 
+
+<audio id="bgm" src="bgm.mp3" loop preload="auto"></audio>
 </body>
 
 </html>
