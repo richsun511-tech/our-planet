@@ -1044,7 +1044,7 @@ body {
 <div class="modal-overlay" id="syncModal" style="display:none;" onclick="if(event.target===this)closeSyncModal()">
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
-    <div class="modal-title">☁️ 云端同步设置 <span style="color:rgba(255,255,255,0.25);font-size:14px;">V16.00</span></div>
+    <div class="modal-title">☁️ 云端同步设置 <span style="color:rgba(255,255,255,0.25);font-size:14px;">V16.04</span></div>
 
     <div style="margin-bottom:16px;padding:12px;border-radius:12px;background:rgba(87,217,163,0.1);font-size:13px;color:var(--text2);line-height:1.6;" id="syncHelp">
       💡 首次使用需输入 GitHub Token 启用同步。<br>
@@ -2363,17 +2363,21 @@ function playMusic() {
   if (!bgm) return;
   
   bgm.volume = 0;
-  bgm.play().catch(e => console.log('Audio play failed:', e));
+  const playPromise = bgm.play();
   
-  // 3秒渐入
-  let fadeTime = 3000;
-  let startTime = Date.now();
-  const fadeIn = setInterval(() => {
-    const elapsed = Date.now() - startTime;
-    const progress = Math.min(elapsed / fadeTime, 1);
-    bgm.volume = progress * 0.5; // 最大音量0.5
-    if (progress >= 1) clearInterval(fadeIn);
-  }, 50);
+  if (playPromise !== undefined) {
+    playPromise.then(() => {
+      // 3秒渐入
+      let fadeTime = 3000;
+      let startTime = Date.now();
+      const fadeIn = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / fadeTime, 1);
+        bgm.volume = progress * 0.5; // 最大音量0.5
+        if (progress >= 1) clearInterval(fadeIn);
+      }, 50);
+    }).catch(e => console.log('Audio play failed:', e));
+  }
 }
 
 // 音乐暂停函数（带1秒渐出）
@@ -2891,6 +2895,8 @@ function playDing() {
 function init() {
   initStars();
   loadSyncConfig();
+  const bgm = document.getElementById('bgm');
+  if (bgm) { bgm.load(); }
   applyAvatar(loadAvatar());
   loadMemories().then(() => {
     initTagBar();
@@ -2934,6 +2940,6 @@ init();
 </script>
 
 
-<audio id="bgm" src="bgm.mp3" loop></audio>
+<audio id="bgm" src="bgm.mp3" loop preload="auto"></audio>
 </body>
 </html>
